@@ -1,11 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { format } from 'date-fns'
 import { IndianRupee, FileText, Calendar, CreditCard, PlusCircle } from 'lucide-react'
+import { RecentVouchersTable } from '@/components/dashboard/recent-vouchers-table'
 
 export const dynamic = 'force-dynamic'
 
@@ -156,48 +154,11 @@ export default async function DashboardPage() {
               <p className="text-sm mt-2">Create your first expense voucher to get started</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Voucher No.</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Paid To</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Payment Mode</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentVouchers.map((voucher) => (
-                    <TableRow key={voucher.id}>
-                      <TableCell className="font-medium">{voucher.voucher_number}</TableCell>
-                      <TableCell>{format(new Date(voucher.expense_date), 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>{voucher.paid_to}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{voucher.category?.name || 'N/A'}</Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">{voucher.description}</TableCell>
-                      <TableCell className="font-semibold">₹{Number(voucher.amount).toLocaleString('en-IN')}</TableCell>
-                      <TableCell>
-                        <Badge variant={voucher.payment_mode === 'Cash' ? 'default' : 'secondary'}>
-                          {voucher.payment_mode}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{voucher.created_by_profile?.name || 'N/A'}</TableCell>
-                      <TableCell>
-                        <Link href={`/dashboard/vouchers/${voucher.id}`}>
-                          <Button variant="outline" size="sm">View</Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <RecentVouchersTable 
+              vouchers={recentVouchers} 
+              isAdmin={isAdmin}
+              currentUserId={user.id}
+            />
           )}
         </CardContent>
       </Card>
