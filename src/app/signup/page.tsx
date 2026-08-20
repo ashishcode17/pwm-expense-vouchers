@@ -65,8 +65,8 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="text-2xl font-bold mb-2">Property With Manish</div>
-          <CardTitle className="text-xl">Create Account</CardTitle>
-          <CardDescription>Sign up to create expense vouchers</CardDescription>
+          <CardTitle className="text-xl">Create Your Account</CardTitle>
+          <CardDescription>Sign up to start creating expense vouchers</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
