@@ -1,12 +1,13 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
-import { Printer, Download, ArrowLeft, Edit } from 'lucide-react'
+import { Printer, Download, ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import type { CompanySettings } from '@/lib/types'
 import { generateVoucherPDF } from '@/lib/pdf-generator'
+import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
 interface VoucherData {
@@ -33,11 +34,15 @@ interface VoucherData {
 interface VoucherViewProps {
   voucher: VoucherData
   settings: CompanySettings | null
+  canEdit?: boolean
+  isAdmin?: boolean
 }
 
-export function VoucherView({ voucher, settings }: VoucherViewProps) {
+export function VoucherView({ voucher, settings, canEdit = false, isAdmin = false }: VoucherViewProps) {
   const router = useRouter()
   const printRef = useRef<HTMLDivElement>(null)
+  const [deleting, setDeleting] = useState(false)
+  const supabase = createClient()
 
   const handlePrint = () => {
     window.print()
@@ -52,6 +57,30 @@ export function VoucherView({ voucher, settings }: VoucherViewProps) {
     } catch (error) {
       console.error('Error generating PDF:', error)
       toast.error('Failed to generate PDF')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete this voucher?\nVoucher: ${voucher.voucher_number}\nPaid To: ${voucher.paid_to}\nAmount: ₹${Number(voucher.amount).toLocaleString('en-IN')}`)) {
+      return
+    }
+
+    setDeleting(true)
+    try {
+      const { error } = await supabase
+        .from('vouchers')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', voucher.id)
+
+      if (error) throw error
+
+      toast.success('Voucher deleted successfully')
+      router.push('/dashboard')
+      router.refresh()
+    } catch (error) {
+      console.error('Error deleting voucher:', error)
+      toast.error('Failed to delete voucher')
+      setDeleting(false)
     }
   }
 
@@ -73,14 +102,27 @@ export function VoucherView({ voucher, settings }: VoucherViewProps) {
             </Button>
             
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => router.push(`/dashboard/vouchers/${voucher.id}/edit`)}
-                className="gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                Edit
-              </Button>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/dashboard/vouchers/${voucher.id}/edit`)}
+                  className="gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+              )}
+              {isAdmin && (
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={handlePrint}

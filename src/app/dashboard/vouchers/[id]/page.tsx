@@ -8,6 +8,18 @@ export default async function VoucherPage({ params }: { params: Promise<{ id: st
   const { id } = await params
   const supabase = await createClient()
   
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    notFound()
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
   const { data: voucher } = await supabase
     .from('vouchers')
     .select(`
@@ -30,6 +42,8 @@ export default async function VoucherPage({ params }: { params: Promise<{ id: st
     .select('*')
     .single()
 
-  return <VoucherView voucher={voucher} settings={settings} />
+  const canEdit = profile?.role === 'admin' || voucher.created_by === user.id
+
+  return <VoucherView voucher={voucher} settings={settings} canEdit={canEdit} isAdmin={profile?.role === 'admin'} />
 }
 // Force rebuild
