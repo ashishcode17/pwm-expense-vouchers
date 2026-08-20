@@ -18,11 +18,13 @@ import { use } from 'react'
 interface Employee {
   id: string
   name: string
+  is_active?: boolean
 }
 
 interface Category {
   id: string
   name: string
+  is_active?: boolean
 }
 
 interface Voucher {
@@ -92,14 +94,15 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
 
       setFormData(voucher)
 
-      // Fetch employees and categories
+      // Fetch employees and categories (filter active ones client-side to avoid query issues)
       const [employeesRes, categoriesRes] = await Promise.all([
-        supabase.from('employees').select('id, name').is('is_active', true).order('name'),
-        supabase.from('expense_categories').select('id, name').is('is_active', true).order('name')
+        supabase.from('employees').select('id, name, is_active').order('name'),
+        supabase.from('expense_categories').select('id, name, is_active').order('name')
       ])
 
-      setEmployees(employeesRes.data || [])
-      setCategories(categoriesRes.data || [])
+      // Filter active ones client-side
+      setEmployees((employeesRes.data || []).filter(e => e.is_active))
+      setCategories((categoriesRes.data || []).filter(c => c.is_active))
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Failed to load voucher')
