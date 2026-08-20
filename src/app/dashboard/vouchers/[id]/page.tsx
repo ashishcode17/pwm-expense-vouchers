@@ -4,7 +4,8 @@ import { VoucherView } from '@/components/voucher/voucher-view'
 
 export const dynamic = 'force-dynamic'
 
-export default async function VoucherPage({ params }: { params: { id: string } }) {
+export default async function VoucherPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   
   const { data: voucher } = await supabase
@@ -16,7 +17,7 @@ export default async function VoucherPage({ params }: { params: { id: string } }
       approved_by_employee:employees!vouchers_approved_by_fkey(name, designation),
       created_by_profile:profiles(name)
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .is('deleted_at', null)
     .single()
 
