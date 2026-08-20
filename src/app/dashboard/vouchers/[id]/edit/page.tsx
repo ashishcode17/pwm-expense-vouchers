@@ -94,8 +94,8 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
 
       // Fetch employees and categories
       const [employeesRes, categoriesRes] = await Promise.all([
-        supabase.from('employees').select('id, name').eq('is_active', true).order('name'),
-        supabase.from('expense_categories').select('id, name').eq('is_active', true).order('name')
+        supabase.from('employees').select('id, name').is('is_active', true).order('name'),
+        supabase.from('expense_categories').select('id, name').is('is_active', true).order('name')
       ])
 
       setEmployees(employeesRes.data || [])
