@@ -94,15 +94,15 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
 
       setFormData(voucher)
 
-      // Fetch employees and categories (filter active ones client-side to avoid query issues)
+      // Fetch employees and categories (filter active ones client-side)
       const [employeesRes, categoriesRes] = await Promise.all([
-        supabase.from('employees').select('id, name, is_active').order('name'),
-        supabase.from('expense_categories').select('id, name, is_active').order('name')
+        supabase.from('employees').select('id, name, active').order('name'),
+        supabase.from('expense_categories').select('id, name, active').order('name')
       ])
 
       // Filter active ones client-side
-      setEmployees((employeesRes.data || []).filter(e => e.is_active))
-      setCategories((categoriesRes.data || []).filter(c => c.is_active))
+      setEmployees((employeesRes.data || []).filter(e => e.active))
+      setCategories((categoriesRes.data || []).filter(c => c.active))
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Failed to load voucher')
