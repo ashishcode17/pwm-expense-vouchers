@@ -18,13 +18,13 @@ import { use } from 'react'
 interface Employee {
   id: string
   name: string
-  is_active?: boolean
+  active?: boolean
 }
 
 interface Category {
   id: string
   name: string
-  is_active?: boolean
+  active?: boolean
 }
 
 interface Voucher {
