@@ -147,10 +147,10 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  if (loading) {
+  if (loading || !formData.id || employees.length === 0 || categories.length === 0) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <p className="text-gray-500">Loading voucher...</p>
+        <p className="text-gray-500">Loading voucher data...</p>
       </div>
     )
   }
@@ -220,7 +220,12 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
                   onValueChange={(value) => value && setFormData({ ...formData, category_id: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue>
+                      {formData.category_id 
+                        ? categories.find(c => c.id === formData.category_id)?.name || 'Select category'
+                        : 'Select category'
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -252,7 +257,9 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
                   onValueChange={(value) => value && setFormData({ ...formData, payment_mode: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select payment mode" />
+                    <SelectValue>
+                      {formData.payment_mode || 'Select payment mode'}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Cash">Cash</SelectItem>
@@ -285,7 +292,12 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
                   onValueChange={(value) => value && setFormData({ ...formData, paid_by: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select employee" />
+                    <SelectValue>
+                      {formData.paid_by 
+                        ? employees.find(e => e.id === formData.paid_by)?.name || 'Select employee'
+                        : 'Select employee'
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {employees.map((emp) => (
@@ -314,7 +326,12 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
                   onValueChange={(value) => value && setFormData({ ...formData, approved_by: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select employee" />
+                    <SelectValue>
+                      {formData.approved_by 
+                        ? employees.find(e => e.id === formData.approved_by)?.name || 'Select employee'
+                        : 'Select employee'
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {employees.map((emp) => (
