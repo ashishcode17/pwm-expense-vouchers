@@ -130,7 +130,6 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
           category_id: formData.category_id,
           description: formData.description,
           payment_mode: formData.payment_mode,
-          transaction_ref: formData.transaction_ref,
           paid_by: formData.paid_by,
           requested_by: formData.requested_by,
           approved_by: formData.approved_by,
