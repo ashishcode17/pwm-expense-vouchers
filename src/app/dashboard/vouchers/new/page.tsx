@@ -1,0 +1,425 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { amountToWords } from '@/lib/amount-to-words'
+import toast from 'react-hot-toast'
+import type { Employee, ExpenseCategory } from '@/lib/types'
+
+export default function NewVoucherPage() {
+  const router = useRouter()
+  const supabase = createClient()
+  
+  const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [categories, setCategories] = useState<ExpenseCategory[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
+  
+  const [formData, setFormData] = useState({
+    expense_date: new Date().toISOString().split('T')[0],
+    paid_to: '',
+    category_id: '',
+    description: '',
+    amount: '',
+    payment_mode: 'Cash',
+    transaction_reference: '',
+    paid_by: '',
+    requested_by: '',
+    approved_by: '',
+    remarks: '',
+  })
+  
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+
+  const amountWords = useMemo(() => {
+    if (formData.amount) {
+      const amount = parseFloat(formData.amount)
+      if (!isNaN(amount)) {
+        return amountToWords(amount)
+      }
+    }
+    return ''
+  }, [formData.amount])
+
+  const fetchData = async () => {
+    try {
+      const [categoriesRes, employeesRes] = await Promise.all([
+        supabase.from('expense_categories').select('*').eq('active', true).order('name'),
+        supabase.from('employees').select('*').eq('active', true).order('name'),
+      ])
+
+      if (categoriesRes.data) setCategories(categoriesRes.data)
+      if (employeesRes.data) setEmployees(employeesRes.data)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      toast.error('Failed to load form data')
+    }
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+    fetchData()
+  }, [])
+
+  const generateVoucherNumber = async () => {
+    const year = new Date().getFullYear()
+    
+    const { data, error } = await supabase.rpc('get_next_voucher_number', {
+      voucher_year: year
+    })
+
+    if (error) throw error
+
+    const sequence = data as number
+    const voucherNumber = `PWM/EXP/${year}/${String(sequence).padStart(4, '0')}`
+    
+    return { voucherNumber, sequence }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
+      
+      if (!validTypes.includes(file.type)) {
+        toast.error('Please upload JPG, PNG, or PDF files only')
+        return
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size should be less than 5MB')
+        return
+      }
+      
+      setReceiptFile(file)
+    }
+  }
+
+  const uploadReceipt = async (voucherId: string): Promise<string | null> => {
+    if (!receiptFile) return null
+
+    setUploading(true)
+    try {
+      const fileExt = receiptFile.name.split('.').pop()
+      const fileName = `${voucherId}-${Date.now()}.${fileExt}`
+      const filePath = `receipts/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('vouchers')
+        .upload(filePath, receiptFile)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('vouchers')
+        .getPublicUrl(filePath)
+
+      return publicUrl
+    } catch (error) {
+      console.error('Error uploading receipt:', error)
+      toast.error('Failed to upload receipt')
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.paid_to || !formData.category_id || !formData.description || !formData.amount) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    const amount = parseFloat(formData.amount)
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { voucherNumber, sequence } = await generateVoucherNumber()
+
+      const voucherData = {
+        voucher_number: voucherNumber,
+        voucher_sequence: sequence,
+        expense_date: formData.expense_date,
+        paid_to: formData.paid_to,
+        category_id: formData.category_id,
+        description: formData.description,
+        amount: amount,
+        amount_in_words: amountWords,
+        payment_mode: formData.payment_mode,
+        transaction_reference: formData.transaction_reference || null,
+        paid_by: formData.paid_by || null,
+        requested_by: formData.requested_by || null,
+        approved_by: formData.approved_by || null,
+        remarks: formData.remarks || null,
+        created_by: user.id,
+      }
+
+      const { data: voucher, error } = await supabase
+        .from('vouchers')
+        .insert(voucherData)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      if (receiptFile && voucher) {
+        const receiptUrl = await uploadReceipt(voucher.id)
+        if (receiptUrl) {
+          await supabase
+            .from('vouchers')
+            .update({ receipt_url: receiptUrl })
+            .eq('id', voucher.id)
+        }
+      }
+
+      toast.success(`Voucher ${voucherNumber} created successfully!`)
+      router.push(`/dashboard/vouchers/${voucher.id}`)
+    } catch (error) {
+      console.error('Error creating voucher:', error)
+      const message = error instanceof Error ? error.message : 'Failed to create voucher'
+      toast.error(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="p-8 max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">New Expense Voucher</h1>
+        <p className="mt-1 text-gray-600">Create a new expense voucher</p>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Voucher Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Voucher Number</Label>
+                <Input value="Auto-generated" disabled className="bg-gray-50" />
+                <p className="text-xs text-gray-500">Format: PWM/EXP/YYYY/NNNN</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="expense_date">Date *</Label>
+                <Input
+                  id="expense_date"
+                  type="date"
+                  value={formData.expense_date}
+                  onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="paid_to">Paid To *</Label>
+              <Input
+                id="paid_to"
+                placeholder="e.g., Rahul, ABC Stationers, Uber"
+                value={formData.paid_to}
+                onChange={(e) => setFormData({ ...formData, paid_to: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount (₹) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="1250"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Amount in Words</Label>
+                <div className="p-2 bg-gray-50 border rounded-md text-sm min-h-[40px] flex items-center">
+                  {amountWords || 'Enter amount to see words'}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category_id">Expense Category *</Label>
+              <select
+                id="category_id"
+                value={formData.category_id}
+                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                required
+              >
+                <option value="">Select category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Expense Description / Purpose *</Label>
+              <Textarea
+                id="description"
+                placeholder="e.g., Printing of 100 Kainchi Retreat brochures for client meeting"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="payment_mode">Payment Mode *</Label>
+                <select
+                  id="payment_mode"
+                  value={formData.payment_mode}
+                  onChange={(e) => setFormData({ ...formData, payment_mode: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  required
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Card">Card</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {formData.payment_mode !== 'Cash' && (
+                <div className="space-y-2">
+                  <Label htmlFor="transaction_reference">Transaction / Reference ID</Label>
+                  <Input
+                    id="transaction_reference"
+                    placeholder="e.g., UPI Ref: 123456789"
+                    value={formData.transaction_reference}
+                    onChange={(e) => setFormData({ ...formData, transaction_reference: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="paid_by">Paid By</Label>
+                <select
+                  id="paid_by"
+                  value={formData.paid_by}
+                  onChange={(e) => setFormData({ ...formData, paid_by: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select employee</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="requested_by">Requested By / Expense For</Label>
+                <Input
+                  id="requested_by"
+                  placeholder="Name or department"
+                  value={formData.requested_by}
+                  onChange={(e) => setFormData({ ...formData, requested_by: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="approved_by">Approved By</Label>
+                <select
+                  id="approved_by"
+                  value={formData.approved_by}
+                  onChange={(e) => setFormData({ ...formData, approved_by: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select approver</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="receipt">Attach Bill / Receipt</Label>
+              <Input
+                id="receipt"
+                type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
+                onChange={handleFileChange}
+              />
+              {receiptFile && (
+                <p className="text-sm text-gray-600">
+                  Selected: {receiptFile.name}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="remarks">Remarks</Label>
+              <Textarea
+                id="remarks"
+                placeholder="Additional notes or comments"
+                value={formData.remarks}
+                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                rows={2}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-6 flex gap-4">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={loading || uploading}
+            className="flex-1"
+          >
+            {loading ? 'Creating Voucher...' : 'Create Voucher'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() => router.push('/dashboard')}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </div>
+  )
+}
