@@ -23,7 +23,11 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar userName={profile?.name || user.email} />
+      <Sidebar 
+        userName={profile?.name || user.email || 'User'} 
+        userEmail={profile?.email || user.email || ''}
+        userRole={profile?.role || 'staff'}
+      />
       <main className="flex-1 overflow-y-auto bg-gray-50">
         {children}
       </main>

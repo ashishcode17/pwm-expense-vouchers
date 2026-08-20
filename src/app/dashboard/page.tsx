@@ -12,6 +12,18 @@ export const dynamic = 'force-dynamic'
 export default async function DashboardPage() {
   const supabase = await createClient()
   
+  // Get current user and profile
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  const isAdmin = profile?.role === 'admin'
+  
   // Get today's date
   const today = new Date().toISOString().split('T')[0]
   const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
@@ -60,8 +72,15 @@ export default async function DashboardPage() {
     <div className="p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">PWM Expense Vouchers</h1>
-          <p className="mt-1 text-gray-600">Manage your office expenses and vouchers</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isAdmin ? 'PWM Expense Vouchers' : 'My Vouchers'}
+          </h1>
+          <p className="mt-1 text-gray-600">
+            {isAdmin 
+              ? 'Manage your office expenses and vouchers' 
+              : 'View and manage your expense vouchers'
+            }
+          </p>
         </div>
         <Link href="/dashboard/vouchers/new">
           <Button size="lg" className="gap-2">
@@ -71,7 +90,8 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-8">
+      {isAdmin && (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today&apos;s Expenses</CardTitle>
@@ -122,10 +142,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Vouchers</CardTitle>
+          <CardTitle>{isAdmin ? 'Recent Vouchers' : 'My Recent Vouchers'}</CardTitle>
         </CardHeader>
         <CardContent>
           {!recentVouchers || recentVouchers.length === 0 ? (

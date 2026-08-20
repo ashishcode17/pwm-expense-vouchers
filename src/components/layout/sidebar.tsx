@@ -2,24 +2,28 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, List, BarChart3, Settings, LogOut, PlusCircle } from 'lucide-react'
+import { Home, List, BarChart3, Settings, LogOut, PlusCircle, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import toast from 'react-hot-toast'
 
-const navItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'New Voucher', href: '/dashboard/vouchers/new', icon: PlusCircle },
-  { name: 'Expense Register', href: '/dashboard/register', icon: List },
-  { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+const allNavItems = [
+  { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['admin', 'staff'] },
+  { name: 'New Voucher', href: '/dashboard/vouchers/new', icon: PlusCircle, roles: ['admin', 'staff'] },
+  { name: 'Expense Register', href: '/dashboard/register', icon: List, roles: ['admin'] },
+  { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin'] },
+  { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['admin'] },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['admin'] },
 ]
 
 interface SidebarProps {
   userName?: string
+  userEmail?: string
+  userRole?: string
 }
 
-export function Sidebar({ userName }: SidebarProps) {
+export function Sidebar({ userName, userEmail, userRole = 'staff' }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -34,6 +38,9 @@ export function Sidebar({ userName }: SidebarProps) {
       toast.error('Failed to logout')
     }
   }
+
+  // Filter nav items based on user role
+  const navItems = allNavItems.filter(item => item.roles.includes(userRole))
 
   return (
     <div className="flex h-screen w-64 flex-col border-r bg-white">
@@ -65,8 +72,14 @@ export function Sidebar({ userName }: SidebarProps) {
       </nav>
       
       <div className="border-t p-4">
-        <div className="mb-3 px-3">
-          <p className="text-sm font-medium text-gray-900">{userName || 'User'}</p>
+        <div className="mb-3 px-3 space-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-900">{userName || 'User'}</p>
+            <Badge variant={userRole === 'admin' ? 'default' : 'secondary'} className="text-xs">
+              {userRole === 'admin' ? 'Admin' : 'Staff'}
+            </Badge>
+          </div>
+          <p className="text-xs text-gray-500 truncate">{userEmail}</p>
         </div>
         <Button
           variant="outline"
