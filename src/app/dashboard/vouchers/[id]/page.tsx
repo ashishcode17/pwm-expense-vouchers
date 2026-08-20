@@ -31,3 +31,4 @@ export default async function VoucherPage({ params }: { params: { id: string } }
 
   return <VoucherView voucher={voucher} settings={settings} />
 }
+// Force rebuild
