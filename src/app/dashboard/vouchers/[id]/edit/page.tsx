@@ -147,10 +147,49 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  if (loading || !formData.id || employees.length === 0 || categories.length === 0) {
+  if (loading || !formData.id) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <p className="text-gray-500">Loading voucher data...</p>
+        <p className="text-gray-500">Loading voucher...</p>
+      </div>
+    )
+  }
+
+  if (employees.length === 0 || categories.length === 0) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto">
+        <div className="mb-6">
+          <Link href={`/dashboard/vouchers/${id}`}>
+            <Button variant="ghost" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Voucher
+            </Button>
+          </Link>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cannot Load Edit Form</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <p className="text-red-600 font-semibold mb-4">
+                ⚠️ Missing Required Data
+              </p>
+              <p className="text-gray-600 mb-4">
+                {employees.length === 0 && 'Employees data not accessible.'}
+                {categories.length === 0 && ' Categories data not accessible.'}
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                This might be due to missing RLS policies in Supabase.
+                <br />
+                Please run the SQL script first!
+              </p>
+              <Link href={`/dashboard/vouchers/${id}`}>
+                <Button>Back to Voucher</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
