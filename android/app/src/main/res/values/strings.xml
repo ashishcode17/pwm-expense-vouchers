@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PWM Expense Vouchers</string>
+    <string name="title_activity_main">PWM Expense Vouchers</string>
+    <string name="package_name">com.propertywithmanish.vouchers</string>
+    <string name="custom_url_scheme">com.propertywithmanish.vouchers</string>
+</resources>
