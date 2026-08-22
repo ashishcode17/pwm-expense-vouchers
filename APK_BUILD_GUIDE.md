@@ -4,7 +4,7 @@
 
 https://github.com/ashishcode17/pwm-expense-vouchers/releases
 
-Use **v1.2+** (release-signed). Prefer over older debug APKs.
+Use **v1.4+** (release-signed, PWM Voucher logo). Prefer over older debug APKs.
 
 ## What this APK is
 

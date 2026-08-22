@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import toast from 'react-hot-toast'
+import { BrandLogo } from '@/components/brand-logo'
 
 const allNavItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['admin', 'staff'] },
@@ -75,8 +76,13 @@ export function AppShell({
   const sidebarContent = (
     <>
       <div className="border-b p-4 md:p-6">
-        <h1 className="text-lg font-bold text-gray-900 md:text-xl">Property With Manish</h1>
-        <p className="text-sm text-gray-600">Expense Vouchers</p>
+        <div className="flex items-center gap-3">
+          <BrandLogo variant="icon" className="h-11 w-11 shrink-0 object-contain" />
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-bold text-gray-900 md:text-lg">PWM Voucher</h1>
+            <p className="text-sm text-gray-600">Expense Vouchers</p>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
@@ -171,9 +177,12 @@ export function AppShell({
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-gray-900">PWM Vouchers</p>
-            <p className="truncate text-xs text-gray-500">{userName || 'User'}</p>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <BrandLogo variant="icon" className="h-8 w-8 shrink-0 object-contain" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-900">PWM Vouchers</p>
+              <p className="truncate text-xs text-gray-500">{userName || 'User'}</p>
+            </div>
           </div>
           <Link href="/dashboard/vouchers/new">
             <Button size="sm" className="gap-1 px-2.5">

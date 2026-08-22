@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert } from '@/components/ui/alert'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { BrandLogo } from '@/components/brand-logo'
 
 export default function SignupPage() {
   const [name, setName] = useState('')
@@ -64,7 +65,9 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <div className="text-2xl font-bold mb-2">Property With Manish</div>
+          <div className="mx-auto mb-2 flex justify-center">
+            <BrandLogo className="h-28 w-28 object-contain" priority />
+          </div>
           <CardTitle className="text-xl">Create Your Account</CardTitle>
           <CardDescription>Sign up to start creating expense vouchers</CardDescription>
         </CardHeader>
