@@ -93,7 +93,7 @@ export default function ReportsPage() {
   const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
         <p className="mt-1 text-gray-600">View monthly expense summaries and breakdowns</p>

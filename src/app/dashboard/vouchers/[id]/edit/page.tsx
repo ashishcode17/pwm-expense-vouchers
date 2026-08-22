@@ -186,7 +186,7 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
 
   if (loading || !formData.id) {
     return (
-      <div className="p-8 flex items-center justify-center">
+      <div className="flex items-center justify-center p-4 md:p-8">
         <p className="text-gray-500">Loading voucher...</p>
       </div>
     )
@@ -194,7 +194,7 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
 
   if (employees.length === 0 || categories.length === 0) {
     return (
-      <div className="p-8 max-w-4xl mx-auto">
+      <div className="mx-auto max-w-4xl p-4 md:p-8">
         <div className="mb-6">
           <Link href={`/dashboard/vouchers/${id}`}>
             <Button variant="ghost" className="gap-2">
@@ -232,7 +232,7 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl p-4 md:p-8">
       <div className="mb-6">
         <Link href={`/dashboard/vouchers/${id}`}>
           <Button variant="ghost" className="gap-2">

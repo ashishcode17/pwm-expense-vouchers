@@ -191,14 +191,14 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="text-center py-12 text-gray-500">Loading settings...</div>
       </div>
     )
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="mt-1 text-gray-600">Manage company details, employees, and expense categories</p>

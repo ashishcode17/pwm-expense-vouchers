@@ -115,14 +115,14 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center">
+      <div className="flex items-center justify-center p-4 md:p-8">
         <p className="text-gray-500">Loading users...</p>
       </div>
     )
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
         <p className="mt-1 text-gray-600">Manage user accounts and permissions</p>

@@ -174,10 +174,10 @@ export default function NewVoucherPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">New Expense Voucher</h1>
-        <p className="mt-1 text-gray-600">Create a new expense voucher</p>
+    <div className="p-4 max-w-4xl mx-auto md:p-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">New Expense Voucher</h1>
+        <p className="mt-1 text-sm text-gray-600 md:text-base">Create a new expense voucher</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -365,12 +365,12 @@ export default function NewVoucherPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 flex gap-4">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:gap-4">
           <Button
             type="submit"
             size="lg"
             disabled={loading || uploading}
-            className="flex-1"
+            className="w-full flex-1 sm:w-auto"
           >
             {loading ? 'Creating Voucher...' : 'Create Voucher'}
           </Button>
@@ -380,6 +380,7 @@ export default function NewVoucherPage() {
             size="lg"
             onClick={() => router.push('/dashboard')}
             disabled={loading}
+            className="w-full sm:w-auto"
           >
             Cancel
           </Button>

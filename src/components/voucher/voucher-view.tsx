@@ -89,19 +89,19 @@ export function VoucherView({ voucher, settings, isAdmin = false }: VoucherViewP
 
   return (
     <div>
-      <div className="print:hidden p-8 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6 flex items-center justify-between">
+      <div className="print:hidden bg-gray-50 p-4 md:p-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="ghost"
               onClick={() => router.push('/dashboard')}
-              className="gap-2"
+              className="w-fit gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
-            
-            <div className="flex gap-2">
+
+            <div className="flex flex-wrap gap-2">
               {isAdmin && (
                 <Button
                   variant="outline"
@@ -123,18 +123,11 @@ export function VoucherView({ voucher, settings, isAdmin = false }: VoucherViewP
                   {deleting ? 'Deleting...' : 'Delete'}
                 </Button>
               )}
-              <Button
-                variant="outline"
-                onClick={handlePrint}
-                className="gap-2"
-              >
+              <Button variant="outline" onClick={handlePrint} className="gap-2">
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
-              <Button
-                onClick={handleDownloadPDF}
-                className="gap-2"
-              >
+              <Button onClick={handleDownloadPDF} className="gap-2">
                 <Download className="h-4 w-4" />
                 Download PDF
               </Button>
@@ -144,16 +137,16 @@ export function VoucherView({ voucher, settings, isAdmin = false }: VoucherViewP
       </div>
 
       {voucher.receipt_url && (
-        <div className="print:hidden px-8 pb-6 bg-gray-50">
-          <div className="max-w-4xl mx-auto">
+        <div className="print:hidden bg-gray-50 px-4 pb-4 md:px-8 md:pb-6">
+          <div className="mx-auto max-w-4xl">
             <ReceiptDisplay receiptUrl={voucher.receipt_url} showDownload={true} />
           </div>
         </div>
       )}
 
-      <div className="print:p-0 p-8 bg-gray-50">
-        <div ref={printRef} className="max-w-4xl mx-auto bg-white print:shadow-none shadow-lg">
-          <div className="p-12 print:p-8">
+      <div className="print:p-0 bg-gray-50 p-4 md:p-8">
+        <div ref={printRef} className="mx-auto max-w-4xl bg-white shadow-lg print:shadow-none">
+          <div className="p-5 print:p-8 md:p-12">
             {/* Header */}
             <div className="text-center mb-8 border-b-2 border-gray-300 pb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-1">
@@ -255,7 +248,7 @@ export function VoucherView({ voucher, settings, isAdmin = false }: VoucherViewP
             </div>
 
             {/* Signature Section */}
-            <div className="grid grid-cols-4 gap-8 pt-12 mt-12 border-t border-gray-300">
+            <div className="mt-8 grid grid-cols-2 gap-4 border-t border-gray-300 pt-8 print:mt-12 print:grid-cols-4 print:gap-8 print:pt-12 md:mt-12 md:grid-cols-4 md:gap-8 md:pt-12">
               <div className="text-center">
                 <div className="h-16 border-b border-gray-400 mb-2"></div>
                 <p className="font-semibold text-sm">Prepared By</p>
