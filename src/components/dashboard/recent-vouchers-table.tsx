@@ -88,7 +88,14 @@ export function RecentVouchersTable({ vouchers, isAdmin }: RecentVouchersTablePr
               </Badge>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link href={`/dashboard/vouchers/${voucher.id}`}>
+              <Link
+                href={`/dashboard/vouchers/${voucher.id}`}
+                prefetch={true}
+                onTouchStart={() => {
+                  // Warm the route early on mobile
+                  router.prefetch(`/dashboard/vouchers/${voucher.id}`)
+                }}
+              >
                 <Button variant="outline" size="sm" className="gap-1">
                   <Eye className="h-3.5 w-3.5" />
                   View

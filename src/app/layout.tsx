@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import { CapacitorBackButton } from '@/components/capacitor-back-button'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -42,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <CapacitorBackButton />
         {children}
         <Toaster position="top-right" />
       </body>

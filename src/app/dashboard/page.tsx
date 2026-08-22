@@ -28,20 +28,41 @@ export default async function DashboardPage() {
     .toISOString()
     .split('T')[0]
 
-  const { data: todayExpenses } = await supabase
-    .from('vouchers')
-    .select('amount')
-    .eq('expense_date', today)
-    .is('deleted_at', null)
+  const [todayResult, monthResult, recentResult] = await Promise.all([
+    isAdmin
+      ? supabase.from('vouchers').select('amount').eq('expense_date', today).is('deleted_at', null)
+      : Promise.resolve({ data: [] as { amount: number }[] }),
+    isAdmin
+      ? supabase
+          .from('vouchers')
+          .select('amount, payment_mode')
+          .gte('expense_date', firstDayOfMonth)
+          .is('deleted_at', null)
+      : Promise.resolve({ data: [] as { amount: number; payment_mode: string }[] }),
+    supabase
+      .from('vouchers')
+      .select(`
+        id,
+        voucher_number,
+        expense_date,
+        paid_to,
+        description,
+        amount,
+        payment_mode,
+        created_by,
+        category:expense_categories(name),
+        created_by_profile:profiles(name)
+      `)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ])
+
+  const todayExpenses = todayResult.data
+  const monthExpenses = monthResult.data
+  const recentVouchers = recentResult.data
 
   const todayTotal = todayExpenses?.reduce((sum, v) => sum + Number(v.amount), 0) || 0
-
-  const { data: monthExpenses } = await supabase
-    .from('vouchers')
-    .select('amount, payment_mode')
-    .gte('expense_date', firstDayOfMonth)
-    .is('deleted_at', null)
-
   const monthTotal = monthExpenses?.reduce((sum, v) => sum + Number(v.amount), 0) || 0
   const voucherCount = monthExpenses?.length || 0
 
@@ -54,18 +75,6 @@ export default async function DashboardPage() {
     monthExpenses
       ?.filter((v) => ['UPI', 'Bank Transfer', 'Card'].includes(v.payment_mode))
       .reduce((sum, v) => sum + Number(v.amount), 0) || 0
-
-  const { data: recentVouchers } = await supabase
-    .from('vouchers')
-    .select(`
-      *,
-      category:expense_categories(name),
-      paid_by_employee:employees!vouchers_paid_by_fkey(name),
-      created_by_profile:profiles(name)
-    `)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(10)
 
   return (
     <div className="p-4 pb-8 md:p-8">
@@ -170,7 +179,7 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <RecentVouchersTable vouchers={recentVouchers} isAdmin={isAdmin} />
+            <RecentVouchersTable vouchers={(recentVouchers || []) as never} isAdmin={isAdmin} />
           )}
         </CardContent>
       </Card>

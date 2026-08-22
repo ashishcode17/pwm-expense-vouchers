@@ -1,46 +1,45 @@
-# PWM Expense Vouchers — Android Weblink APK
+# PWM Expense Vouchers — Android APK
 
-This APK is a **native Android shell** that opens your live website:
+## Download (latest release)
+
+https://github.com/ashishcode17/pwm-expense-vouchers/releases
+
+Use **v1.2+** (release-signed). Prefer over older debug APKs.
+
+## What this APK is
+
+A weblink shell that opens:
 
 **https://pwm-expense-vouchers.vercel.app**
 
-## Compatibility
+## Install notes (Play Protect / “needs scan”)
 
-| Requirement | Value |
-|-------------|--------|
-| Minimum Android | **7.0 (API 24)** |
-| Target Android | 15 (API 35) |
-| CPU | armeabi-v7a, arm64-v8a, x86, x86_64 |
-| Coverage | Virtually all Android phones in active use |
+Sideloaded apps (not from Play Store) will often show:
+- “Install unknown apps”
+- “Play Protect scan”
 
-Capacitor 8 cannot go below Android 7.0. That still covers almost every phone sold/used today.
+That is **normal Android behavior**. We cannot fully remove it without publishing on Google Play.
 
-## Download
+What we did to make installs safer/cleaner:
+- **Release-signed APK** (not debug-signed)
+- Stable package id: `com.propertywithmanish.vouchers`
+- Versioned releases (v1.2+)
 
-Latest release: https://github.com/ashishcode17/pwm-expense-vouchers/releases
+After first install, later updates with the same signing key are smoother.
 
-Install steps:
-1. Download `PWM-Expense-Vouchers.apk`
-2. Open on phone → Install
-3. Allow **Install unknown apps** if asked
-4. Open app → website loads inside the app
-5. Internet required
+## Features in the app shell
 
-## What works on phones
+- Hardware **Back** goes one page back (does not immediately minimize)
+- Works on Android 7.0+ phones
+- Camera/gallery for bill upload (permission may be asked)
 
-- Login / signup
-- Create vouchers
-- Camera / gallery for bill upload (permission prompt may appear)
-- Print / PDF on supported devices
-- Works on small and large screens
+## Rebuild release APK (developers)
 
-## Rebuild locally
-
-```bat
-git pull origin main
+```bash
+# Create android/keystore.properties (not committed) pointing at your keystore
 cd android
-gradlew.bat clean assembleDebug
+./gradlew assembleRelease
 ```
 
-APK output:
-`android\app\build\outputs\apk\debug\app-debug.apk`
+Output:
+`android/app/build/outputs/apk/release/app-release.apk`
