@@ -1,60 +1,46 @@
-# Build Android APK — PWM Expense Vouchers
+# PWM Expense Vouchers — Android Weblink APK
 
-The app loads your live website: `https://pwm-expense-vouchers.vercel.app`
+This APK is a **native Android shell** that opens your live website:
 
-## Easiest way: Download from GitHub Actions
+**https://pwm-expense-vouchers.vercel.app**
 
-1. Open: https://github.com/ashishcode17/pwm-expense-vouchers/actions
-2. Click the latest **"Build Android APK"** run (green check)
-3. Scroll to **Artifacts**
-4. Download **PWM-Expense-Vouchers-APK**
-5. Unzip → you get `PWM-Expense-Vouchers.apk`
-6. Copy APK to your Android phone and install it
-   - Enable **Install unknown apps** if asked
+## Compatibility
 
-To rebuild anytime: Actions → **Build Android APK** → **Run workflow**
+| Requirement | Value |
+|-------------|--------|
+| Minimum Android | **7.0 (API 24)** |
+| Target Android | 15 (API 35) |
+| CPU | armeabi-v7a, arm64-v8a, x86, x86_64 |
+| Coverage | Virtually all Android phones in active use |
 
----
+Capacitor 8 cannot go below Android 7.0. That still covers almost every phone sold/used today.
 
-## Local build (optional)
+## Download
 
-### Requirements
-- Node.js 20+
-- Java JDK 17
-- Android Studio (or Android SDK)
+Latest release: https://github.com/ashishcode17/pwm-expense-vouchers/releases
 
-### Commands
+Install steps:
+1. Download `PWM-Expense-Vouchers.apk`
+2. Open on phone → Install
+3. Allow **Install unknown apps** if asked
+4. Open app → website loads inside the app
+5. Internet required
 
-```bash
-git clone https://github.com/ashishcode17/pwm-expense-vouchers.git
-cd pwm-expense-vouchers
+## What works on phones
+
+- Login / signup
+- Create vouchers
+- Camera / gallery for bill upload (permission prompt may appear)
+- Print / PDF on supported devices
+- Works on small and large screens
+
+## Rebuild locally
+
+```bat
 git pull origin main
-npm install
-
-# Create placeholder web assets (app uses live URL)
-mkdir -p out
-echo '<html><body>Loading...</body></html>' > out/index.html
-
-npx cap sync android
-
 cd android
-./gradlew assembleDebug
+gradlew.bat clean assembleDebug
 ```
 
-APK path:
-
-```
-android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-### Android Studio
-1. Open folder `android`
-2. Wait for Gradle sync
-3. **Build → Build Bundle(s) / APK(s) → Build APK(s)**
-
----
-
-## Notes
-- This is a **debug APK** (fine for internal office use)
-- Internet is required — the app opens your Vercel site
-- Package id: `com.propertywithmanish.vouchers`
+APK output:
+`android\app\build\outputs\apk\debug\app-debug.apk`

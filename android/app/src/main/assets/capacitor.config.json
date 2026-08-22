@@ -4,9 +4,16 @@
   "webDir": "out",
   "server": {
     "url": "https://pwm-expense-vouchers.vercel.app",
-    "cleartext": true
+    "cleartext": true,
+    "allowNavigation": [
+      "pwm-expense-vouchers.vercel.app",
+      "*.vercel.app",
+      "*.supabase.co"
+    ]
   },
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": true,
+    "backgroundColor": "#ffffff",
+    "webContentsDebuggingEnabled": false
   }
 }
