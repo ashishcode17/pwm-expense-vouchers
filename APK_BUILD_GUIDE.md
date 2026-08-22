@@ -10,7 +10,9 @@ Use **v1.2+** (release-signed). Prefer over older debug APKs.
 
 A weblink shell that opens:
 
-**https://pwm-expense-vouchers.vercel.app**
+**https://vouchers.propertywithmanish.com**
+
+(Old Vercel URL still works as backup, but APK uses the branded domain.)
 
 ## Install notes (Play Protect / “needs scan”)
 

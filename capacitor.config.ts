@@ -4,13 +4,13 @@ const config: CapacitorConfig = {
   appId: 'com.propertywithmanish.vouchers',
   appName: 'PWM Expense Vouchers',
   webDir: 'out',
-  // Web-link app: always open the live website inside the Android shell
   server: {
-    url: 'https://pwm-expense-vouchers.vercel.app',
+    url: 'https://vouchers.propertywithmanish.com',
     cleartext: true,
     allowNavigation: [
-      'pwm-expense-vouchers.vercel.app',
-      '*.vercel.app',
+      'vouchers.propertywithmanish.com',
+      'propertywithmanish.com',
+      '*.propertywithmanish.com',
       '*.supabase.co',
     ],
   },

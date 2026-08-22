@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Allow HTTPS to Vercel + any cleartext fallback if needed -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
@@ -8,8 +7,8 @@
         </trust-anchors>
     </base-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">pwm-expense-vouchers.vercel.app</domain>
-        <domain includeSubdomains="true">vercel.app</domain>
+        <domain includeSubdomains="true">vouchers.propertywithmanish.com</domain>
+        <domain includeSubdomains="true">propertywithmanish.com</domain>
         <domain includeSubdomains="true">supabase.co</domain>
     </domain-config>
 </network-security-config>

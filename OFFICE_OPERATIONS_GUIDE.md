@@ -10,7 +10,7 @@ Yeh ek **cloud web app** hai. Android APK sirf ek **wrapper** hai jo phone pe we
 
 | Piece | Role | URL / Place |
 |-------|------|-------------|
-| **Website (real app)** | Login, vouchers, PDF, reports | `https://pwm-expense-vouchers.vercel.app` |
+| **Website (real app)** | Login, vouchers, PDF, reports | `https://vouchers.propertywithmanish.com` |
 | **Database + Auth + File storage** | Users, vouchers, bills | Supabase |
 | **Android APK** | Phone icon / WebView shell | Opens the Vercel URL |
 | **iPhone** | Safari → Add to Home Screen | Same Vercel URL |
@@ -129,7 +129,7 @@ Amount words mein auto convert hota hai (Indian format).
 ## 6) Office mein deploy / install kaise karna hai
 
 ### A) Website (already live)
-- URL: `https://pwm-expense-vouchers.vercel.app`
+- URL: `https://vouchers.propertywithmanish.com`
 - Host: Vercel
 - Code push to `main` → auto redeploy (agar connected hai)
 
@@ -288,6 +288,6 @@ Key folders:
 
 ## Quick links
 
-- Live app: https://pwm-expense-vouchers.vercel.app  
+- Live app: https://vouchers.propertywithmanish.com  
 - APK releases: https://github.com/ashishcode17/pwm-expense-vouchers/releases  
 - Repo: https://github.com/ashishcode17/pwm-expense-vouchers  

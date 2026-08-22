@@ -17,7 +17,7 @@ Apple does **not** allow free “download IPA and install on every iPhone” lik
 On any iPhone/iPad:
 
 1. Open Safari (not Chrome)
-2. Go to: **https://pwm-expense-vouchers.vercel.app**
+2. Go to: **https://vouchers.propertywithmanish.com**
 3. Tap the **Share** button
 4. Tap **Add to Home Screen**
 5. Tap **Add**
