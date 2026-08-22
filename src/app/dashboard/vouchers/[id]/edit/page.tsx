@@ -90,10 +90,10 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
 
       if (voucherError) throw voucherError
 
-      // Check if user can edit this voucher
-      if (profile?.role !== 'admin' && voucher.created_by !== user.id) {
-        toast.error('You do not have permission to edit this voucher')
-        router.push('/dashboard')
+      // Only admin can edit vouchers
+      if (profile?.role !== 'admin') {
+        toast.error('Only admins can edit vouchers')
+        router.push(`/dashboard/vouchers/${id}`)
         return
       }
 

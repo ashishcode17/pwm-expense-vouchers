@@ -154,11 +154,10 @@ export default async function DashboardPage() {
               <p className="text-sm mt-2">Create your first expense voucher to get started</p>
             </div>
           ) : (
-            <RecentVouchersTable 
-              vouchers={recentVouchers} 
-              isAdmin={isAdmin}
-              currentUserId={user.id}
-            />
+              <RecentVouchersTable 
+                vouchers={recentVouchers} 
+                isAdmin={isAdmin}
+              />
           )}
         </CardContent>
       </Card>

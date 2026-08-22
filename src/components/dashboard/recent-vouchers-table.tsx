@@ -27,10 +27,9 @@ interface VoucherWithRelations {
 interface RecentVouchersTableProps {
   vouchers: VoucherWithRelations[]
   isAdmin: boolean
-  currentUserId: string
 }
 
-export function RecentVouchersTable({ vouchers, isAdmin, currentUserId }: RecentVouchersTableProps) {
+export function RecentVouchersTable({ vouchers, isAdmin }: RecentVouchersTableProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -57,10 +56,6 @@ export function RecentVouchersTable({ vouchers, isAdmin, currentUserId }: Recent
     } finally {
       setDeletingId(null)
     }
-  }
-
-  const canEdit = (voucher: VoucherWithRelations) => {
-    return isAdmin || voucher.created_by === currentUserId
   }
 
   return (
@@ -101,7 +96,7 @@ export function RecentVouchersTable({ vouchers, isAdmin, currentUserId }: Recent
                   <Link href={`/dashboard/vouchers/${voucher.id}`}>
                     <Button variant="outline" size="sm">View</Button>
                   </Link>
-                  {canEdit(voucher) && (
+                  {isAdmin && (
                     <Link href={`/dashboard/vouchers/${voucher.id}/edit`}>
                       <Button variant="outline" size="sm" className="gap-1">
                         <Edit className="h-3 w-3" />

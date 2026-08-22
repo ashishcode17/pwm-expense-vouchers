@@ -35,11 +35,10 @@ interface VoucherData {
 interface VoucherViewProps {
   voucher: VoucherData
   settings: CompanySettings | null
-  canEdit?: boolean
   isAdmin?: boolean
 }
 
-export function VoucherView({ voucher, settings, canEdit = false, isAdmin = false }: VoucherViewProps) {
+export function VoucherView({ voucher, settings, isAdmin = false }: VoucherViewProps) {
   const router = useRouter()
   const printRef = useRef<HTMLDivElement>(null)
   const [deleting, setDeleting] = useState(false)
@@ -103,7 +102,7 @@ export function VoucherView({ voucher, settings, canEdit = false, isAdmin = fals
             </Button>
             
             <div className="flex gap-2">
-              {canEdit && (
+              {isAdmin && (
                 <Button
                   variant="outline"
                   onClick={() => router.push(`/dashboard/vouchers/${voucher.id}/edit`)}

@@ -42,8 +42,8 @@ export default async function VoucherPage({ params }: { params: Promise<{ id: st
     .select('*')
     .single()
 
-  const canEdit = profile?.role === 'admin' || voucher.created_by === user.id
+  const isAdmin = profile?.role === 'admin'
 
-  return <VoucherView voucher={voucher} settings={settings} canEdit={canEdit} isAdmin={profile?.role === 'admin'} />
+  return <VoucherView voucher={voucher} settings={settings} isAdmin={isAdmin} />
 }
 // Force rebuild
