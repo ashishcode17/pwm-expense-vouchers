@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.9.24'
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
         mavenCentral()
@@ -20,21 +20,16 @@ allprojects {
         google()
         mavenCentral()
     }
-}
 
-subprojects { subproject ->
-    subproject.configurations.configureEach { configuration ->
-        // kotlin-stdlib 1.8+ already includes jdk7/jdk8 APIs.
-        // Old kotlin-stdlib-jdk7/jdk8:1.6.21 jars cause duplicate class errors.
-        configuration.exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
-        configuration.exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
-
-        configuration.resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'org.jetbrains.kotlin') {
-                details.useVersion '1.9.24'
-                details.because 'Align all Kotlin artifacts to one version'
-            }
-        }
+    // Capacitor fix: align Kotlin so jdk7/jdk8 1.6.21 jars are not pulled
+    // See https://github.com/ionic-team/capacitor/issues/7866
+    configurations.all {
+        resolutionStrategy.force(
+            "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+            "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22",
+            "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22",
+            "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22"
+        )
     }
 }
 
