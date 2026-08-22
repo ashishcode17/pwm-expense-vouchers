@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { amountToWords } from '@/lib/amount-to-words'
 import toast from 'react-hot-toast'
 import type { Employee, ExpenseCategory } from '@/lib/types'
-import { uploadReceiptFile, validateReceiptFile } from '@/lib/upload-receipt'
+import { uploadReceiptFile } from '@/lib/upload-receipt'
+import { ReceiptAttachmentField } from '@/components/voucher/receipt-attachment-field'
 
 export default function NewVoucherPage() {
   const router = useRouter()
@@ -83,19 +84,8 @@ export default function NewVoucherPage() {
     return { voucherNumber, sequence }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const validationError = validateReceiptFile(file)
-
-      if (validationError) {
-        toast.error(validationError)
-        e.target.value = ''
-        return
-      }
-
-      setReceiptFile(file)
-    }
+  const handleFileChange = (file: File | null) => {
+    setReceiptFile(file)
   }
 
   const uploadReceipt = async (voucherId: string): Promise<string | null> => {
@@ -356,21 +346,11 @@ export default function NewVoucherPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="receipt">Attach Bill / Receipt</Label>
-              <Input
-                id="receipt"
-                type="file"
-                accept="image/jpeg,image/png,image/jpg,application/pdf,.jpg,.jpeg,.png,.pdf"
-                capture="environment"
-                onChange={handleFileChange}
-              />
-              {receiptFile && (
-                <p className="text-sm text-gray-600">
-                  Selected: {receiptFile.name}
-                </p>
-              )}
-            </div>
+            <ReceiptAttachmentField
+              selectedFile={receiptFile}
+              onFileSelect={handleFileChange}
+              inputId="new-receipt"
+            />
 
             <div className="space-y-2">
               <Label htmlFor="remarks">Remarks</Label>

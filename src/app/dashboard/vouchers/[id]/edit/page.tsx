@@ -14,7 +14,8 @@ import toast from 'react-hot-toast'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import { use } from 'react'
-import { uploadReceiptFile, validateReceiptFile } from '@/lib/upload-receipt'
+import { uploadReceiptFile } from '@/lib/upload-receipt'
+import { ReceiptAttachmentField } from '@/components/voucher/receipt-attachment-field'
 
 interface Employee {
   id: string
@@ -51,6 +52,7 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  const [removeExistingReceipt, setRemoveExistingReceipt] = useState(false)
   const [employees, setEmployees] = useState<Employee[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<Partial<Voucher>>({})
@@ -119,21 +121,6 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
     fetchData()
   }, [fetchData])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const validationError = validateReceiptFile(file)
-
-      if (validationError) {
-        toast.error(validationError)
-        e.target.value = ''
-        return
-      }
-
-      setReceiptFile(file)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -156,6 +143,15 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
         .eq('id', id)
 
       if (error) throw error
+
+      if (removeExistingReceipt && !receiptFile) {
+        const { error: removeError } = await supabase
+          .from('vouchers')
+          .update({ receipt_url: null })
+          .eq('id', id)
+
+        if (removeError) throw removeError
+      }
 
       if (receiptFile) {
         setUploading(true)
@@ -434,24 +430,18 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="receipt">Attach Bill / Receipt</Label>
-              {formData.receipt_url && !receiptFile && (
-                <p className="text-sm text-green-700">
-                  Current receipt attached. Choose a new file to replace it.
-                </p>
-              )}
-              <Input
-                id="receipt"
-                type="file"
-                accept="image/jpeg,image/png,image/jpg,application/pdf,.jpg,.jpeg,.png,.pdf"
-                capture="environment"
-                onChange={handleFileChange}
-              />
-              {receiptFile && (
-                <p className="text-sm text-gray-600">Selected: {receiptFile.name}</p>
-              )}
-            </div>
+            <ReceiptAttachmentField
+              existingReceiptUrl={formData.receipt_url}
+              selectedFile={receiptFile}
+              onFileSelect={setReceiptFile}
+              removeExisting={removeExistingReceipt}
+              onRemoveExisting={() => {
+                setRemoveExistingReceipt(true)
+                setReceiptFile(null)
+              }}
+              onUndoRemoveExisting={() => setRemoveExistingReceipt(false)}
+              inputId="edit-receipt"
+            />
 
             <div className="flex gap-4">
               <Button type="submit" disabled={saving || uploading} className="gap-2">
