@@ -8,6 +8,7 @@ import { Printer, Download, ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import type { CompanySettings } from '@/lib/types'
 import { generateVoucherPDF } from '@/lib/pdf-generator'
 import { createClient } from '@/lib/supabase/client'
+import { ReceiptDisplay } from '@/components/voucher/receipt-display'
 import toast from 'react-hot-toast'
 
 interface VoucherData {
@@ -143,6 +144,14 @@ export function VoucherView({ voucher, settings, canEdit = false, isAdmin = fals
         </div>
       </div>
 
+      {voucher.receipt_url && (
+        <div className="print:hidden px-8 pb-6 bg-gray-50">
+          <div className="max-w-4xl mx-auto">
+            <ReceiptDisplay receiptUrl={voucher.receipt_url} showDownload={true} />
+          </div>
+        </div>
+      )}
+
       <div className="print:p-0 p-8 bg-gray-50">
         <div ref={printRef} className="max-w-4xl mx-auto bg-white print:shadow-none shadow-lg">
           <div className="p-12 print:p-8">
@@ -239,6 +248,11 @@ export function VoucherView({ voucher, settings, canEdit = false, isAdmin = fals
             <div className="mb-8">
               <span className="font-semibold">Supporting Bill Attached:</span>{' '}
               <span className="font-bold">{voucher.receipt_url ? 'Yes' : 'No'}</span>
+              {voucher.receipt_url && (
+                <span className="print:hidden text-sm text-gray-500 ml-2">
+                  (See attached bill above)
+                </span>
+              )}
             </div>
 
             {/* Signature Section */}

@@ -325,6 +325,29 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
               />
             </div>
 
+            <Card className="border-blue-100 bg-blue-50/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Bill / Receipt Attachment</CardTitle>
+                <p className="text-sm text-gray-600">
+                  View the current receipt, upload a new one, or remove the existing file.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ReceiptAttachmentField
+                  existingReceiptUrl={formData.receipt_url}
+                  selectedFile={receiptFile}
+                  onFileSelect={setReceiptFile}
+                  removeExisting={removeExistingReceipt}
+                  onRemoveExisting={() => {
+                    setRemoveExistingReceipt(true)
+                    setReceiptFile(null)
+                  }}
+                  onUndoRemoveExisting={() => setRemoveExistingReceipt(false)}
+                  inputId="edit-receipt"
+                />
+              </CardContent>
+            </Card>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="payment_mode">Payment Mode</Label>
@@ -429,19 +452,6 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
                 rows={2}
               />
             </div>
-
-            <ReceiptAttachmentField
-              existingReceiptUrl={formData.receipt_url}
-              selectedFile={receiptFile}
-              onFileSelect={setReceiptFile}
-              removeExisting={removeExistingReceipt}
-              onRemoveExisting={() => {
-                setRemoveExistingReceipt(true)
-                setReceiptFile(null)
-              }}
-              onUndoRemoveExisting={() => setRemoveExistingReceipt(false)}
-              inputId="edit-receipt"
-            />
 
             <div className="flex gap-4">
               <Button type="submit" disabled={saving || uploading} className="gap-2">
