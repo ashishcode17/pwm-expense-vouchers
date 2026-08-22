@@ -41,7 +41,8 @@ if errorlevel 1 (
 
 echo [4/4] Building APK with Gradle...
 cd android
-call gradlew.bat assembleDebug --no-daemon
+call gradlew.bat clean
+call gradlew.bat assembleDebug --no-daemon --refresh-dependencies
 if errorlevel 1 (
   echo.
   echo BUILD FAILED. Open the android folder in Android Studio and sync, then try again.
