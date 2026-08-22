@@ -14,6 +14,7 @@ import toast from 'react-hot-toast'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import { use } from 'react'
+import { uploadReceiptFile, validateReceiptFile } from '@/lib/upload-receipt'
 
 interface Employee {
   id: string
@@ -48,6 +49,8 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
   const [employees, setEmployees] = useState<Employee[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState<Partial<Voucher>>({})
@@ -116,6 +119,21 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
     fetchData()
   }, [fetchData])
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      const validationError = validateReceiptFile(file)
+
+      if (validationError) {
+        toast.error(validationError)
+        e.target.value = ''
+        return
+      }
+
+      setReceiptFile(file)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -138,6 +156,27 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
         .eq('id', id)
 
       if (error) throw error
+
+      if (receiptFile) {
+        setUploading(true)
+        try {
+          const receiptUrl = await uploadReceiptFile(supabase, id, receiptFile)
+          const { error: receiptError } = await supabase
+            .from('vouchers')
+            .update({ receipt_url: receiptUrl })
+            .eq('id', id)
+
+          if (receiptError) throw receiptError
+        } catch (uploadError) {
+          console.error('Error uploading receipt:', uploadError)
+          const message =
+            uploadError instanceof Error ? uploadError.message : 'Failed to upload receipt'
+          toast.error(message)
+          return
+        } finally {
+          setUploading(false)
+        }
+      }
 
       toast.success('Voucher updated successfully!')
       router.push(`/dashboard/vouchers/${id}`)
@@ -395,10 +434,29 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="receipt">Attach Bill / Receipt</Label>
+              {formData.receipt_url && !receiptFile && (
+                <p className="text-sm text-green-700">
+                  Current receipt attached. Choose a new file to replace it.
+                </p>
+              )}
+              <Input
+                id="receipt"
+                type="file"
+                accept="image/jpeg,image/png,image/jpg,application/pdf,.jpg,.jpeg,.png,.pdf"
+                capture="environment"
+                onChange={handleFileChange}
+              />
+              {receiptFile && (
+                <p className="text-sm text-gray-600">Selected: {receiptFile.name}</p>
+              )}
+            </div>
+
             <div className="flex gap-4">
-              <Button type="submit" disabled={saving} className="gap-2">
+              <Button type="submit" disabled={saving || uploading} className="gap-2">
                 <Save className="h-4 w-4" />
-                {saving ? 'Updating...' : 'Update Voucher'}
+                {saving || uploading ? 'Updating...' : 'Update Voucher'}
               </Button>
               <Link href={`/dashboard/vouchers/${id}`}>
                 <Button type="button" variant="outline">

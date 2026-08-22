@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { amountToWords } from '@/lib/amount-to-words'
 import toast from 'react-hot-toast'
 import type { Employee, ExpenseCategory } from '@/lib/types'
+import { uploadReceiptFile, validateReceiptFile } from '@/lib/upload-receipt'
 
 export default function NewVoucherPage() {
   const router = useRouter()
@@ -85,18 +86,14 @@ export default function NewVoucherPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
-      
-      if (!validTypes.includes(file.type)) {
-        toast.error('Please upload JPG, PNG, or PDF files only')
+      const validationError = validateReceiptFile(file)
+
+      if (validationError) {
+        toast.error(validationError)
+        e.target.value = ''
         return
       }
-      
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB')
-        return
-      }
-      
+
       setReceiptFile(file)
     }
   }
@@ -106,24 +103,11 @@ export default function NewVoucherPage() {
 
     setUploading(true)
     try {
-      const fileExt = receiptFile.name.split('.').pop()
-      const fileName = `${voucherId}-${Date.now()}.${fileExt}`
-      const filePath = `receipts/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('vouchers')
-        .upload(filePath, receiptFile)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('vouchers')
-        .getPublicUrl(filePath)
-
-      return publicUrl
+      return await uploadReceiptFile(supabase, voucherId, receiptFile)
     } catch (error) {
       console.error('Error uploading receipt:', error)
-      toast.error('Failed to upload receipt')
+      const message = error instanceof Error ? error.message : 'Failed to upload receipt'
+      toast.error(message)
       return null
     } finally {
       setUploading(false)
@@ -377,7 +361,8 @@ export default function NewVoucherPage() {
               <Input
                 id="receipt"
                 type="file"
-                accept=".jpg,.jpeg,.png,.pdf"
+                accept="image/jpeg,image/png,image/jpg,application/pdf,.jpg,.jpeg,.png,.pdf"
+                capture="environment"
                 onChange={handleFileChange}
               />
               {receiptFile && (
