@@ -54,12 +54,15 @@ export function ReceiptDisplay({
           <p className="mt-1 text-sm text-gray-600 break-all">{fileName}</p>
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="gap-1" asChild>
-            <a href={receiptUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" />
-              Open
-            </a>
-          </Button>
+          <a
+            href={receiptUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Open
+          </a>
           {showDownload && (
             <Button variant="default" size="sm" className="gap-1" onClick={handleDownload}>
               <Download className="h-3.5 w-3.5" />
