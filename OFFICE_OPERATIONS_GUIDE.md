@@ -180,6 +180,17 @@ Browser mein same URL.
 - Browser/app cache clear / reinstall APK
 - Confirm Supabase Auth email confirmation settings (agar on hai to email verify zaroori)
 
+### Signup confirmation email opens localhost / “site can’t be reached”
+**Cause:** Supabase **Site URL** still set to `http://localhost:3000`  
+**Fix (do once in Supabase Dashboard):**
+1. Authentication → **URL Configuration**
+2. Site URL → `https://vouchers.propertywithmanish.com`
+3. Redirect URLs mein add karo:
+   - `https://vouchers.propertywithmanish.com/**`
+   - `https://vouchers.propertywithmanish.com/auth/confirm`
+4. Save. Naye signup emails live site pe khulenge.  
+(Verification pehle bhi ho jati thi — sirf redirect broken tha.)
+
 ### Signup hua lekin dashboard / role galat
 **Cause:** `profiles` row missing ya role staff hai  
 **Fix (Supabase SQL):**
