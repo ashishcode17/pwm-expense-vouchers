@@ -22,6 +22,12 @@ export function toUserError(
   if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
     return 'Invalid email or password'
   }
+  if (msg.includes('same password') || msg.includes('should be different')) {
+    return 'New password must be different from your current password'
+  }
+  if (msg.includes('password') && msg.includes('weak')) {
+    return 'Password is too weak. Use at least 6 characters.'
+  }
   if (msg.includes('email not confirmed')) {
     return 'Please confirm your email before signing in'
   }

@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getAuthResetPasswordUrl } from '@/lib/site-url'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,11 +14,20 @@ import toast from 'react-hot-toast'
 import { BrandLogo } from '@/components/brand-logo'
 import { toUserError } from '@/lib/user-error'
 
+function isInvalidCredentials(error: unknown): boolean {
+  const authError = error as { message?: string; code?: string }
+  const msg = authError?.message?.toLowerCase() ?? ''
+  return msg.includes('invalid login credentials') || msg.includes('invalid credentials')
+}
+
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const [error, setError] = useState('')
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmailSent, setResetEmailSent] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -30,6 +40,9 @@ function LoginForm() {
       )
     } else if (authError === 'auth_callback_failed') {
       setError('Sign-in link expired or invalid. Please try again.')
+    } else if (authError === 'reset_failed') {
+      setError('Password reset link expired or invalid. Try Forgot password again.')
+      setShowForgotPassword(true)
     }
   }, [searchParams])
 
@@ -37,6 +50,7 @@ function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setResetEmailSent(false)
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -54,8 +68,37 @@ function LoginForm() {
       const message = toUserError(error, 'Failed to sign in')
       setError(message)
       toast.error(message)
+      if (isInvalidCredentials(error)) {
+        setShowForgotPassword(true)
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      toast.error('Enter your email address first')
+      return
+    }
+
+    setResetting(true)
+    setError('')
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: getAuthResetPasswordUrl(),
+      })
+      if (error) throw error
+      setResetEmailSent(true)
+      toast.success('Password reset link sent. Check your inbox and spam folder.')
+    } catch (error) {
+      console.error('Password reset request failed', error)
+      const message = toUserError(error, 'Could not send reset email')
+      setError(message)
+      toast.error(message)
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -76,6 +119,13 @@ function LoginForm() {
             </Alert>
           )}
 
+          {resetEmailSent && (
+            <Alert className="text-sm">
+              Reset link sent to <span className="font-medium">{email.trim()}</span>. Open the email
+              and set a new password.
+            </Alert>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -85,12 +135,24 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={loading}
+              disabled={loading || resetting}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              {showForgotPassword && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={loading || resetting}
+                  className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+                >
+                  {resetting ? 'Sending…' : 'Forgot password?'}
+                </button>
+              )}
+            </div>
             <Input
               id="password"
               type="password"
@@ -98,11 +160,11 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={loading}
+              disabled={loading || resetting}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || resetting}>
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
 

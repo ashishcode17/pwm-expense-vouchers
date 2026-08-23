@@ -13,6 +13,7 @@ import {
   Users,
   Menu,
   X,
+  UserCircle,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ import { BrandLogo } from '@/components/brand-logo'
 const allNavItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['admin', 'staff'] },
   { name: 'New Voucher', href: '/dashboard/vouchers/new', icon: PlusCircle, roles: ['admin', 'staff'] },
+  { name: 'Profile', href: '/dashboard/profile', icon: UserCircle, roles: ['admin', 'staff'] },
   { name: 'Expense Register', href: '/dashboard/register', icon: List, roles: ['admin'] },
   { name: 'Reports', href: '/dashboard/reports', icon: BarChart3, roles: ['admin'] },
   { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['admin'] },

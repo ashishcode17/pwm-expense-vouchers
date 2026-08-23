@@ -30,3 +30,7 @@ export function getAuthConfirmUrl(): string {
 export function getAuthCallbackUrl(): string {
   return `${getSiteUrl()}/auth/callback`
 }
+
+export function getAuthResetPasswordUrl(): string {
+  return `${getSiteUrl()}/auth/reset-password`
+}
