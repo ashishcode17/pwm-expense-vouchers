@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getAuthConfirmUrl } from '@/lib/site-url'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -25,6 +27,7 @@ export default function SignupPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setNeedsEmailConfirm(false)
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters')
@@ -37,6 +40,7 @@ export default function SignupPage() {
         email,
         password,
         options: {
+          emailRedirectTo: getAuthConfirmUrl(),
           data: {
             name: name,
           },
@@ -45,11 +49,14 @@ export default function SignupPage() {
 
       if (error) throw error
 
+      // Email confirmation enabled → no session until link is clicked
+      if (!data.session) {
+        setNeedsEmailConfirm(true)
+        toast.success('Check your email to confirm your account')
+        return
+      }
+
       toast.success('Account created successfully!')
-      
-      // Auto-login after signup
-      await supabase.auth.signInWithPassword({ email, password })
-      
       router.push('/dashboard')
       router.refresh()
     } catch (error) {
@@ -59,6 +66,36 @@ export default function SignupPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (needsEmailConfirm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="mx-auto mb-2 flex justify-center">
+              <BrandLogo className="h-28 w-28 object-contain" priority />
+            </div>
+            <CardTitle className="text-xl">Confirm your email</CardTitle>
+            <CardDescription>
+              We sent a confirmation link to <span className="font-medium text-gray-900">{email}</span>.
+              Open that link to activate your account, then sign in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert className="text-sm">
+              The link opens the live office site (not localhost). After confirming, you can log in
+              with your email and password.
+            </Alert>
+            <Link href="/login" className="block">
+              <Button type="button" className="w-full">
+                Go to Sign In
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -78,7 +115,7 @@ export default function SignupPage() {
                 {error}
               </Alert>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -91,7 +128,7 @@ export default function SignupPage() {
                 disabled={loading}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -104,7 +141,7 @@ export default function SignupPage() {
                 disabled={loading}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
