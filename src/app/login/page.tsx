@@ -11,6 +11,7 @@ import { Alert } from '@/components/ui/alert'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { BrandLogo } from '@/components/brand-logo'
+import { toUserError } from '@/lib/user-error'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -47,7 +48,8 @@ function LoginForm() {
       router.push('/dashboard')
       router.refresh()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to login'
+      console.error('Login failed', error)
+      const message = toUserError(error, 'Failed to sign in')
       setError(message)
       toast.error(message)
     } finally {

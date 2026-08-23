@@ -79,7 +79,10 @@ export default function ExpenseRegisterPage() {
         query = query.eq('category_id', filters.category)
       }
       if (filters.paymentMode) {
-        query = query.eq('payment_mode', filters.paymentMode)
+        const allowed = ['Cash', 'UPI', 'Bank Transfer', 'Card', 'Other'] as const
+        if ((allowed as readonly string[]).includes(filters.paymentMode)) {
+          query = query.eq('payment_mode', filters.paymentMode)
+        }
       }
       if (filters.paidBy) {
         query = query.eq('paid_by', filters.paidBy)

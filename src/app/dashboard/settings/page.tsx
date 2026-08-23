@@ -168,8 +168,7 @@ export default function SettingsPage() {
       fetchData()
     } catch (error) {
       console.error('Error saving category:', error)
-      const message = error instanceof Error ? error.message : 'Failed to save category'
-      toast.error(message)
+      toast.error('Failed to save category')
     }
   }
 

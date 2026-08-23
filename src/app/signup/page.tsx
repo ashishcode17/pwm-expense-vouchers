@@ -12,6 +12,7 @@ import { Alert } from '@/components/ui/alert'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { BrandLogo } from '@/components/brand-logo'
+import { toUserError } from '@/lib/user-error'
 
 export default function SignupPage() {
   const [name, setName] = useState('')
@@ -60,7 +61,8 @@ export default function SignupPage() {
       router.push('/dashboard')
       router.refresh()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create account'
+      console.error('Signup failed', error)
+      const message = toUserError(error, 'Failed to create account')
       setError(message)
       toast.error(message)
     } finally {
