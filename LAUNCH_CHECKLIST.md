@@ -9,8 +9,8 @@
    - Only `propertywithmanish@gmail.com` in profiles
    - `voucher_count = 0`
    - `auth_user_count = 1`
-   - `receipt_files = 0`
-4. Supabase → **Authentication → URL Configuration**
+4. Storage → bucket **vouchers** → delete all files under `receipts/` (SQL cannot delete storage objects directly)
+5. Supabase → **Authentication → URL Configuration**
    - Site URL = `https://vouchers.propertywithmanish.com`
    - Redirect URLs include `https://vouchers.propertywithmanish.com/**`
 5. Login as admin → Settings → employees/categories → add real office data
