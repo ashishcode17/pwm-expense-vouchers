@@ -1,53 +1,42 @@
 -- ============================================
--- PWM Expense Vouchers — LAUNCH RESET
+-- PWM Expense Vouchers — FULL LAUNCH RESET
 -- Keeps ONLY admin: propertywithmanish@gmail.com
--- Deletes test vouchers, other profiles, and receipt files metadata cleanup notes
--- Run in: Supabase Dashboard → SQL Editor → New query → Run
+-- Deletes: all vouchers, other auth users, profiles,
+--          receipt files, voucher sequence
+-- Run in: Supabase → SQL Editor → New query → Run
+-- Also run 005_security_hardening.sql (or LAUNCH_NOW.sql)
 -- ============================================
 
 BEGIN;
 
--- 1) Soft-delete / remove all vouchers (test data)
-DELETE FROM vouchers;
+-- 1) All expense vouchers (test + real wipe for launch)
+DELETE FROM public.vouchers;
 
--- 2) Reset voucher numbering to zero for current/future years
-DELETE FROM voucher_sequence;
+-- 2) Reset voucher numbering
+DELETE FROM public.voucher_sequence;
 
--- 3) Optional: clear employees (dropdown list) — uncomment if you want empty list
--- DELETE FROM employees;
-
--- 4) Keep default categories OR wipe and reseed:
--- DELETE FROM expense_categories;
--- INSERT INTO expense_categories (name) VALUES
---   ('Refreshments'),
---   ('Travel'),
---   ('Office Supplies'),
---   ('Utilities'),
---   ('Maintenance'),
---   ('Miscellaneous');
-
--- 5) Delete all profiles EXCEPT main admin
-DELETE FROM profiles
+-- 3) Remove non-admin profiles first (FK from vouchers already cleared)
+DELETE FROM public.profiles
 WHERE email IS DISTINCT FROM 'propertywithmanish@gmail.com';
 
--- Ensure admin role is correct
-UPDATE profiles
+-- 4) Ensure remaining admin profile is correct
+UPDATE public.profiles
 SET role = 'admin',
     active = true
 WHERE email = 'propertywithmanish@gmail.com';
 
 COMMIT;
 
--- ============================================
--- AFTER THIS SQL: also delete Auth users in Dashboard
--- ============================================
--- Supabase → Authentication → Users
--- Delete every user EXCEPT propertywithmanish@gmail.com
---
--- Storage cleanup:
--- Supabase → Storage → vouchers → receipts folder → delete all files
---
--- Verify:
--- SELECT email, role FROM profiles;
--- SELECT count(*) FROM vouchers;
--- SELECT * FROM voucher_sequence;
+-- 5) Delete Auth users except primary admin (outside txn; auth schema)
+DELETE FROM auth.users
+WHERE email IS DISTINCT FROM 'propertywithmanish@gmail.com';
+
+-- 6) Wipe all receipt files in storage
+DELETE FROM storage.objects
+WHERE bucket_id = 'vouchers';
+
+-- Verify (should show 1 admin profile, 0 vouchers)
+SELECT email, role, active FROM public.profiles;
+SELECT count(*) AS voucher_count FROM public.vouchers;
+SELECT count(*) AS auth_user_count FROM auth.users;
+SELECT count(*) AS receipt_files FROM storage.objects WHERE bucket_id = 'vouchers';

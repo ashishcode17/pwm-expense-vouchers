@@ -1,16 +1,20 @@
 # Launch Checklist — PWM Expense Vouchers
 
-## 1) Reset data (do this once before office launch)
+## 1) Reset data + harden security (do this once before office launch)
 
 1. Open Supabase → **SQL Editor**
-2. Paste and run: `supabase/RESET_FOR_LAUNCH.sql`
-3. Supabase → **Authentication → Users**
-   - Delete all users **except** `propertywithmanish@gmail.com`
-4. Supabase → **Storage → vouchers → receipts**
-   - Delete all test bill files
-5. Confirm:
-   - Only admin profile remains
-   - Vouchers count = 0
+2. Paste and run the **entire** file: `supabase/LAUNCH_NOW.sql`  
+   (security hardening + wipe to admin-only)
+3. Confirm results at bottom of SQL run:
+   - Only `propertywithmanish@gmail.com` in profiles
+   - `voucher_count = 0`
+   - `auth_user_count = 1`
+   - `receipt_files = 0`
+4. Supabase → **Authentication → URL Configuration**
+   - Site URL = `https://vouchers.propertywithmanish.com`
+   - Redirect URLs include `https://vouchers.propertywithmanish.com/**`
+5. Login as admin → Settings → employees/categories → add real office data
+6. Install APK **v1.5+** on phones (HTTPS-only shell)
 
 ## 2) Custom domain (recommended)
 

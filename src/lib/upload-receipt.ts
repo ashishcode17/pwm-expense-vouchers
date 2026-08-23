@@ -52,7 +52,7 @@ export function getUploadErrorMessage(error: unknown): string {
   }
 
   if (message.includes('row-level security') || message.includes('RLS')) {
-    return 'Upload blocked by permissions. Run the storage setup SQL in Supabase.'
+    return 'Upload blocked by permissions. Run the security hardening SQL in Supabase.'
   }
 
   if (message.includes('mime type') || message.includes('Invalid file type')) {
@@ -66,9 +66,51 @@ export function getUploadErrorMessage(error: unknown): string {
   return message
 }
 
+/** Extract storage object path from a full URL or bare path. */
+export function getReceiptStoragePath(receiptUrl: string): string | null {
+  if (!receiptUrl) return null
+  if (!receiptUrl.includes('://')) {
+    return receiptUrl.replace(/^\/+/, '')
+  }
+  try {
+    const pathname = new URL(receiptUrl).pathname
+    const markers = ['/object/public/vouchers/', '/object/sign/vouchers/', '/object/authenticated/vouchers/']
+    for (const marker of markers) {
+      const idx = pathname.indexOf(marker)
+      if (idx >= 0) {
+        return decodeURIComponent(pathname.slice(idx + marker.length))
+      }
+    }
+    const parts = pathname.split('/vouchers/')
+    if (parts.length > 1) return decodeURIComponent(parts[1])
+  } catch {
+    return null
+  }
+  return null
+}
+
+export async function resolveReceiptUrl(
+  supabase: SupabaseClient,
+  receiptUrl: string,
+  expiresIn = 3600
+): Promise<string> {
+  const path = getReceiptStoragePath(receiptUrl)
+  if (!path) return receiptUrl
+
+  const { data, error } = await supabase.storage.from('vouchers').createSignedUrl(path, expiresIn)
+  if (error || !data?.signedUrl) {
+    return receiptUrl
+  }
+  return data.signedUrl
+}
+
+/**
+ * Upload under receipts/{userId}/... so RLS can scope by owner.
+ * Returns the storage path (not a public URL) for private buckets.
+ */
 export async function uploadReceiptFile(
   supabase: SupabaseClient,
-  voucherId: string,
+  ownerUserId: string,
   file: File
 ): Promise<string> {
   const validationError = validateReceiptFile(file)
@@ -80,27 +122,21 @@ export async function uploadReceiptFile(
   const safeExt = ALLOWED_EXTENSIONS.includes(ext as (typeof ALLOWED_EXTENSIONS)[number])
     ? ext
     : 'jpg'
-  const filePath = `receipts/${voucherId}-${Date.now()}.${safeExt}`
+  const filePath = `receipts/${ownerUserId}/${Date.now()}.${safeExt}`
   const contentType =
     file.type ||
     MIME_TYPES[safeExt as (typeof ALLOWED_EXTENSIONS)[number]] ||
     'application/octet-stream'
 
-  const { error: uploadError } = await supabase.storage
-    .from('vouchers')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType,
-    })
+  const { error: uploadError } = await supabase.storage.from('vouchers').upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType,
+  })
 
   if (uploadError) {
     throw new Error(getUploadErrorMessage(uploadError))
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('vouchers').getPublicUrl(filePath)
-
-  return publicUrl
+  return filePath
 }

@@ -38,12 +38,13 @@ interface Voucher {
   category_id: string
   description: string
   payment_mode: string
-  transaction_ref: string | null
+  transaction_reference: string | null
   paid_by: string
   requested_by: string | null
   approved_by: string | null
   remarks: string | null
   receipt_url: string | null
+  amount_in_words?: string
 }
 
 export default function EditVoucherPage({ params }: { params: Promise<{ id: string }> }) {
@@ -126,43 +127,19 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
     setSaving(true)
 
     try {
-      const { error } = await supabase
-        .from('vouchers')
-        .update({
-          expense_date: formData.expense_date,
-          paid_to: formData.paid_to,
-          amount: formData.amount,
-          category_id: formData.category_id,
-          description: formData.description,
-          payment_mode: formData.payment_mode,
-          paid_by: formData.paid_by,
-          requested_by: formData.requested_by,
-          approved_by: formData.approved_by,
-          remarks: formData.remarks,
-        })
-        .eq('id', id)
-
-      if (error) throw error
-
+      let receiptUrl = formData.receipt_url ?? null
       if (removeExistingReceipt && !receiptFile) {
-        const { error: removeError } = await supabase
-          .from('vouchers')
-          .update({ receipt_url: null })
-          .eq('id', id)
-
-        if (removeError) throw removeError
+        receiptUrl = null
       }
 
       if (receiptFile) {
         setUploading(true)
         try {
-          const receiptUrl = await uploadReceiptFile(supabase, id, receiptFile)
-          const { error: receiptError } = await supabase
-            .from('vouchers')
-            .update({ receipt_url: receiptUrl })
-            .eq('id', id)
-
-          if (receiptError) throw receiptError
+          const {
+            data: { user },
+          } = await supabase.auth.getUser()
+          if (!user) throw new Error('Not authenticated')
+          receiptUrl = await uploadReceiptFile(supabase, user.id, receiptFile)
         } catch (uploadError) {
           console.error('Error uploading receipt:', uploadError)
           const message =
@@ -173,6 +150,27 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
           setUploading(false)
         }
       }
+
+      const { error } = await supabase
+        .from('vouchers')
+        .update({
+          expense_date: formData.expense_date,
+          paid_to: formData.paid_to,
+          amount: formData.amount,
+          amount_in_words: amountWords || formData.amount_in_words,
+          category_id: formData.category_id,
+          description: formData.description,
+          payment_mode: formData.payment_mode,
+          transaction_reference: formData.transaction_reference || null,
+          paid_by: formData.paid_by,
+          requested_by: formData.requested_by,
+          approved_by: formData.approved_by,
+          remarks: formData.remarks,
+          receipt_url: receiptUrl,
+        })
+        .eq('id', id)
+
+      if (error) throw error
 
       toast.success('Voucher updated successfully!')
       router.push(`/dashboard/vouchers/${id}`)
@@ -372,12 +370,14 @@ export default function EditVoucherPage({ params }: { params: Promise<{ id: stri
 
               {formData.payment_mode && formData.payment_mode !== 'Cash' && (
                 <div className="space-y-2">
-                  <Label htmlFor="transaction_ref">Transaction/Reference ID</Label>
+                  <Label htmlFor="transaction_reference">Transaction/Reference ID</Label>
                   <Input
-                    id="transaction_ref"
+                    id="transaction_reference"
                     type="text"
-                    value={formData.transaction_ref || ''}
-                    onChange={(e) => setFormData({ ...formData, transaction_ref: e.target.value })}
+                    value={formData.transaction_reference || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, transaction_reference: e.target.value })
+                    }
                   />
                 </div>
               )}

@@ -88,22 +88,6 @@ export default function NewVoucherPage() {
     setReceiptFile(file)
   }
 
-  const uploadReceipt = async (voucherId: string): Promise<string | null> => {
-    if (!receiptFile) return null
-
-    setUploading(true)
-    try {
-      return await uploadReceiptFile(supabase, voucherId, receiptFile)
-    } catch (error) {
-      console.error('Error uploading receipt:', error)
-      const message = error instanceof Error ? error.message : 'Failed to upload receipt'
-      toast.error(message)
-      return null
-    } finally {
-      setUploading(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -124,6 +108,17 @@ export default function NewVoucherPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
+      // Upload receipt first so staff never need UPDATE (admin-only after hardening)
+      let receiptPath: string | null = null
+      if (receiptFile) {
+        setUploading(true)
+        try {
+          receiptPath = await uploadReceiptFile(supabase, user.id, receiptFile)
+        } finally {
+          setUploading(false)
+        }
+      }
+
       const { voucherNumber, sequence } = await generateVoucherNumber()
 
       const voucherData = {
@@ -141,6 +136,7 @@ export default function NewVoucherPage() {
         requested_by: formData.requested_by || null,
         approved_by: formData.approved_by || null,
         remarks: formData.remarks || null,
+        receipt_url: receiptPath,
         created_by: user.id,
       }
 
@@ -151,16 +147,6 @@ export default function NewVoucherPage() {
         .single()
 
       if (error) throw error
-
-      if (receiptFile && voucher) {
-        const receiptUrl = await uploadReceipt(voucher.id)
-        if (receiptUrl) {
-          await supabase
-            .from('vouchers')
-            .update({ receipt_url: receiptUrl })
-            .eq('id', voucher.id)
-        }
-      }
 
       toast.success(`Voucher ${voucherNumber} created successfully!`)
       router.push(`/dashboard/vouchers/${voucher.id}`)

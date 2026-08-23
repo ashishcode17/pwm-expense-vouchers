@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -13,6 +13,17 @@ import { Download, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import type { Voucher, ExpenseCategory, Employee } from '@/lib/types'
 
+function escapeIlike(value: string): string {
+  return value.replace(/[%_,.()\\]/g, '').trim().slice(0, 80)
+}
+
+function csvCell(value: string | number): string {
+  let s = String(value ?? '')
+  if (/^[=+\-@]/.test(s)) s = `'${s}`
+  if (/[",\n]/.test(s)) s = `"${s.replace(/"/g, '""')}"`
+  return s
+}
+
 export default function ExpenseRegisterPage() {
   const supabase = createClient()
   
@@ -20,6 +31,7 @@ export default function ExpenseRegisterPage() {
   const [categories, setCategories] = useState<ExpenseCategory[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
+  const dropdownsLoaded = useRef(false)
   
   const [filters, setFilters] = useState({
     dateFrom: '',
@@ -29,6 +41,12 @@ export default function ExpenseRegisterPage() {
     paidBy: '',
     search: '',
   })
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(escapeIlike(filters.search)), 300)
+    return () => clearTimeout(t)
+  }, [filters.search])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -36,13 +54,20 @@ export default function ExpenseRegisterPage() {
       let query = supabase
         .from('vouchers')
         .select(`
-          *,
+          id,
+          voucher_number,
+          expense_date,
+          paid_to,
+          description,
+          payment_mode,
+          amount,
           category:expense_categories(name),
           paid_by_employee:employees!vouchers_paid_by_fkey(name),
           approved_by_employee:employees!vouchers_approved_by_fkey(name)
         `)
         .is('deleted_at', null)
         .order('expense_date', { ascending: false })
+        .limit(500)
 
       if (filters.dateFrom) {
         query = query.gte('expense_date', filters.dateFrom)
@@ -59,27 +84,39 @@ export default function ExpenseRegisterPage() {
       if (filters.paidBy) {
         query = query.eq('paid_by', filters.paidBy)
       }
-      if (filters.search) {
-        query = query.or(`voucher_number.ilike.%${filters.search}%,paid_to.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
+      if (debouncedSearch) {
+        const q = debouncedSearch
+        query = query.or(`voucher_number.ilike.%${q}%,paid_to.ilike.%${q}%,description.ilike.%${q}%`)
       }
 
-      const { data } = await query
-      setVouchers(data || [])
+      const { data, error } = await query
+      if (error) throw error
+      setVouchers((data as unknown as Voucher[]) || [])
 
-      const [categoriesRes, employeesRes] = await Promise.all([
-        supabase.from('expense_categories').select('*').eq('active', true).order('name'),
-        supabase.from('employees').select('*').eq('active', true).order('name'),
-      ])
-
-      if (categoriesRes.data) setCategories(categoriesRes.data)
-      if (employeesRes.data) setEmployees(employeesRes.data)
+      if (!dropdownsLoaded.current) {
+        const [categoriesRes, employeesRes] = await Promise.all([
+          supabase.from('expense_categories').select('*').eq('active', true).order('name'),
+          supabase.from('employees').select('*').eq('active', true).order('name'),
+        ])
+        if (categoriesRes.data) setCategories(categoriesRes.data)
+        if (employeesRes.data) setEmployees(employeesRes.data)
+        dropdownsLoaded.current = true
+      }
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Failed to load expenses')
     } finally {
       setLoading(false)
     }
-  }, [filters, supabase])
+  }, [
+    debouncedSearch,
+    filters.category,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.paidBy,
+    filters.paymentMode,
+    supabase,
+  ])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -119,15 +156,15 @@ export default function ExpenseRegisterPage() {
         v.voucher_number,
         v.category?.name || '',
         v.paid_to,
-        v.description.replace(/,/g, ';'),
+        v.description,
         v.payment_mode,
         Number(v.amount).toFixed(2),
         v.paid_by_employee?.name || '',
         v.approved_by_employee?.name || '',
       ])
 
-      const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
-      const blob = new Blob([csv], { type: 'text/csv' })
+      const csv = [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
