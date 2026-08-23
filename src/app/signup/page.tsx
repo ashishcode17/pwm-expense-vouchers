@@ -19,10 +19,32 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
   const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  const handleResendConfirmation = async () => {
+    if (!email) return
+    setResending(true)
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: getAuthConfirmUrl(),
+        },
+      })
+      if (error) throw error
+      toast.success('Confirmation email sent again. Check inbox and spam.')
+    } catch (err) {
+      console.error('Resend confirmation failed', err)
+      toast.error(toUserError(err, 'Could not resend email. Ask admin to confirm your account.'))
+    } finally {
+      setResending(false)
+    }
+  }
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,6 +71,15 @@ export default function SignupPage() {
       })
 
       if (error) throw error
+
+      // Supabase returns empty identities when email already registered (anti-enumeration)
+      if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+        setError(
+          'This email is already registered. Try Sign In, or use Resend below if you never confirmed.'
+        )
+        setNeedsEmailConfirm(true)
+        return
+      }
 
       // Email confirmation enabled → no session until link is clicked
       if (!data.session) {
@@ -80,15 +111,31 @@ export default function SignupPage() {
             </div>
             <CardTitle className="text-xl">Confirm your email</CardTitle>
             <CardDescription>
-              We sent a confirmation link to <span className="font-medium text-gray-900">{email}</span>.
-              Open that link to activate your account, then sign in.
+              We sent a confirmation link to{' '}
+              <span className="font-medium text-gray-900">{email}</span>. Check inbox and spam
+              folder.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive" className="text-sm">
+                {error}
+              </Alert>
+            )}
             <Alert className="text-sm">
-              The link opens the live office site (not localhost). After confirming, you can log in
-              with your email and password.
+              No email? Supabase free plan limits how many emails can be sent per hour. Ask admin
+              to confirm your account in Supabase → Authentication → Users, or turn off email
+              confirmation for the office.
             </Alert>
+            <Button
+              type="button"
+              className="w-full"
+              variant="outline"
+              disabled={resending}
+              onClick={handleResendConfirmation}
+            >
+              {resending ? 'Sending…' : 'Resend confirmation email'}
+            </Button>
             <Link href="/login" className="block">
               <Button type="button" className="w-full">
                 Go to Sign In
