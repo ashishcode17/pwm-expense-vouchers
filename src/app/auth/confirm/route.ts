@@ -15,7 +15,11 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const next = safeNextPath(searchParams.get('next'))
+  const nextParam = searchParams.get('next')
+  const isRecovery = type === 'recovery'
+  const next = isRecovery
+    ? '/dashboard/profile?reset=1'
+    : safeNextPath(nextParam)
   const successUrl = authRedirectUrl(request, next)
   const failUrl = authRedirectUrl(request, '/login?error=confirmation_failed')
 

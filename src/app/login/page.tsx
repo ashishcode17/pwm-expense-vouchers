@@ -41,7 +41,9 @@ function LoginForm() {
     } else if (authError === 'auth_callback_failed') {
       setError('Sign-in link expired or invalid. Please try again.')
     } else if (authError === 'reset_failed') {
-      setError('Password reset link expired or invalid. Try Forgot password again.')
+      setError(
+        'Password reset link could not be verified. Request a new link and open it on the same browser/device where you clicked Forgot password. Admin: update Supabase Reset Password email template to use token_hash (see supabase/EMAIL_TEMPLATES.md).'
+      )
       setShowForgotPassword(true)
     }
   }, [searchParams])
