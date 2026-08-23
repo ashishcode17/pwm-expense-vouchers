@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 import type { Employee, ExpenseCategory } from '@/lib/types'
 import { uploadReceiptFile } from '@/lib/upload-receipt'
 import { ReceiptAttachmentField } from '@/components/voucher/receipt-attachment-field'
+import { toUserError } from '@/lib/user-error'
 
 export default function NewVoucherPage() {
   const router = useRouter()
@@ -152,8 +153,7 @@ export default function NewVoucherPage() {
       router.push(`/dashboard/vouchers/${voucher.id}`)
     } catch (error) {
       console.error('Error creating voucher:', error)
-      const message = error instanceof Error ? error.message : 'Failed to create voucher'
-      toast.error(message)
+      toast.error(toUserError(error, 'Failed to create voucher'))
     } finally {
       setLoading(false)
     }
