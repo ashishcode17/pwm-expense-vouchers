@@ -332,7 +332,7 @@ CREATE INDEX IF NOT EXISTS idx_vouchers_active_created_by
 -- PWM Expense Vouchers — FULL LAUNCH RESET
 -- Keeps ONLY admin: propertywithmanish@gmail.com
 -- Deletes: all vouchers, other auth users, profiles,
---          receipt files, voucher sequence
+--          voucher sequence
 -- Run in: Supabase → SQL Editor → New query → Run
 -- Also run 005_security_hardening.sql (or LAUNCH_NOW.sql)
 -- ============================================
@@ -361,12 +361,15 @@ COMMIT;
 DELETE FROM auth.users
 WHERE email IS DISTINCT FROM 'propertywithmanish@gmail.com';
 
--- 6) Wipe all receipt files in storage
-DELETE FROM storage.objects
-WHERE bucket_id = 'vouchers';
+-- 6) Receipt files: DO NOT use DELETE FROM storage.objects
+--    Supabase blocks direct table deletes (protect_delete trigger).
+--    Clear files in Dashboard instead:
+--    Storage → vouchers → open receipts/ → select all → Delete
+--    Or empty the bucket from Storage UI.
 
 -- Verify (should show 1 admin profile, 0 vouchers)
 SELECT email, role, active FROM public.profiles;
 SELECT count(*) AS voucher_count FROM public.vouchers;
 SELECT count(*) AS auth_user_count FROM auth.users;
+-- Optional read-only check (OK); do not DELETE these rows via SQL:
 SELECT count(*) AS receipt_files FROM storage.objects WHERE bucket_id = 'vouchers';

@@ -24,8 +24,9 @@ Deep security + performance pass before office go-live.
 
 1. Open SQL Editor: https://supabase.com/dashboard/project/ownfexksfpkfojxyjwwv/sql/new  
 2. Paste **all** of `supabase/LAUNCH_NOW.sql` → Run  
-3. Confirm verify queries show **1 admin**, **0 vouchers**, **0 receipt files**  
-4. Auth → URL Configuration → Site URL = `https://vouchers.propertywithmanish.com`
+3. Confirm verify queries show **1 admin**, **0 vouchers**  
+4. Storage → **vouchers** → delete files under `receipts/` (SQL cannot `DELETE FROM storage.objects`)  
+5. Auth → URL Configuration → Site URL = `https://vouchers.propertywithmanish.com`
 
 Until step 2 runs, the old insecure RLS policies remain live on the database.
 
