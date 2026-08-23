@@ -23,5 +23,10 @@ export function getSiteUrl(): string {
 }
 
 export function getAuthConfirmUrl(): string {
+  // Same handler supports PKCE ?code= and ?token_hash= flows
   return `${getSiteUrl()}/auth/confirm`
+}
+
+export function getAuthCallbackUrl(): string {
+  return `${getSiteUrl()}/auth/callback`
 }

@@ -25,7 +25,9 @@ function LoginForm() {
   useEffect(() => {
     const authError = searchParams.get('error')
     if (authError === 'confirmation_failed') {
-      setError('Email confirmation failed. Try signing up again or contact admin.')
+      setError(
+        'Email confirmation failed. The link may have expired — sign up again or ask admin to confirm your email in Supabase.'
+      )
     } else if (authError === 'auth_callback_failed') {
       setError('Sign-in link expired or invalid. Please try again.')
     }
