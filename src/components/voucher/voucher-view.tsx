@@ -8,6 +8,7 @@ import { Printer, Download, ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import type { CompanySettings } from '@/lib/types'
 import { generateVoucherPDF } from '@/lib/pdf-generator'
 import { createClient } from '@/lib/supabase/client'
+import { softDeleteVoucher } from '@/lib/vouchers/delete-voucher'
 import { ReceiptDisplay } from '@/components/voucher/receipt-display'
 import toast from 'react-hot-toast'
 
@@ -67,19 +68,15 @@ export function VoucherView({ voucher, settings, isAdmin = false }: VoucherViewP
 
     setDeleting(true)
     try {
-      const { error } = await supabase
-        .from('vouchers')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', voucher.id)
-
-      if (error) throw error
+      const result = await softDeleteVoucher(supabase, voucher.id)
+      if (!result.ok) throw new Error(result.message)
 
       toast.success('Voucher deleted successfully')
       router.push('/dashboard')
       router.refresh()
     } catch (error) {
       console.error('Error deleting voucher:', error)
-      toast.error('Failed to delete voucher')
+      toast.error(error instanceof Error ? error.message : 'Failed to delete voucher')
       setDeleting(false)
     }
   }

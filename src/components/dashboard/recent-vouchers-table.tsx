@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Edit, Trash2, Eye } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { softDeleteVoucher } from '@/lib/vouchers/delete-voucher'
 import toast from 'react-hot-toast'
 
 interface VoucherWithRelations {
@@ -45,18 +46,14 @@ export function RecentVouchersTable({ vouchers, isAdmin }: RecentVouchersTablePr
 
     setDeletingId(voucher.id)
     try {
-      const { error } = await supabase
-        .from('vouchers')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', voucher.id)
-
-      if (error) throw error
+      const result = await softDeleteVoucher(supabase, voucher.id)
+      if (!result.ok) throw new Error(result.message)
 
       toast.success('Voucher deleted successfully')
       router.refresh()
     } catch (error) {
       console.error('Error deleting voucher:', error)
-      toast.error('Failed to delete voucher')
+      toast.error(error instanceof Error ? error.message : 'Failed to delete voucher')
     } finally {
       setDeletingId(null)
     }
