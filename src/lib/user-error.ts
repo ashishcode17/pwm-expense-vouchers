@@ -27,8 +27,8 @@ export function toUserError(
   if (msg.includes('user already registered') || msg.includes('already been registered')) {
     return 'An account with this email already exists'
   }
-  if (msg.includes('rate limit') || msg.includes('too many requests')) {
-    return 'Too many attempts. Please wait and try again'
+  if (msg.includes('rate limit') || msg.includes('too many requests') || msg.includes('email rate')) {
+    return 'Too many emails sent. Wait 1 hour or ask admin to confirm your account in Supabase.'
   }
   if (msg.includes('network') || msg.includes('fetch')) {
     return 'Network error. Check your connection and try again'
@@ -39,10 +39,8 @@ export function toUserError(
   if (msg.includes('duplicate') || msg.includes('unique')) {
     return 'That value already exists'
   }
-
-  // Never pass raw PostgREST/Auth/schema text to the UI
-  if (raw && raw.length < 80 && !/[/{}\[\]<>]/.test(raw) && !msg.includes('postgres')) {
-    // Allow short known-safe Auth messages only via mappings above
+  if (msg.includes('signup is disabled')) {
+    return 'New signups are disabled. Contact your admin.'
   }
 
   return fallback

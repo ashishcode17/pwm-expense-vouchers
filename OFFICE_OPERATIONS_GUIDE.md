@@ -191,6 +191,26 @@ Browser mein same URL.
 4. Save. Naye signup emails live site pe khulenge.  
 (Verification pehle bhi ho jati thi — sirf redirect broken tha.)
 
+### Signup email hi nahi aa rahi
+**Common causes:**
+1. **Supabase free email limit** — built-in mail ~2–4 emails/hour. Wait 1 hour or use Resend on signup screen.
+2. **Email already registered** — Supabase dubara mail nahi bhejta (security). Use **Sign In** or admin manually confirms user.
+3. **Spam folder** — check Promotions/Spam.
+4. **Wrong redirect URL** — Auth → URL Configuration mein `https://vouchers.propertywithmanish.com/auth/confirm` allowlist mein hona chahiye.
+
+**Best fix for office (recommended):**
+1. Supabase → **Authentication → Providers → Email**
+2. **Confirm email → OFF** (save)
+3. Staff signup ke baad seedha login — no email needed
+
+**Manual confirm (admin):**
+1. Supabase → **Authentication → Users**
+2. User dhundho → **Confirm user** / mark email confirmed
+3. User ab login kar sakta hai
+
+**Custom SMTP (optional, production):**
+Auth → **SMTP Settings** → Gmail/SendGrid etc. for reliable delivery.
+
 ### Signup hua lekin dashboard / role galat
 **Cause:** `profiles` row missing ya role staff hai  
 **Fix (Supabase SQL):**
