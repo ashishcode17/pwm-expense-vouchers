@@ -1,23 +1,24 @@
 /**
  * Map Auth / PostgREST / storage errors to safe user-facing copy.
- * Log the real error server-side or in console for debugging.
  */
 export function toUserError(
   error: unknown,
   fallback = 'Something went wrong. Please try again.'
 ): string {
-  const raw =
-    error instanceof Error
-      ? error.message
-      : typeof error === 'object' &&
-          error !== null &&
-          'message' in error &&
-          typeof (error as { message: unknown }).message === 'string'
-        ? (error as { message: string }).message
-        : ''
-
+  const authError = error as { message?: string; code?: string; status?: number }
+  const code = authError?.code?.toLowerCase() ?? ''
+  const raw = authError?.message ?? (error instanceof Error ? error.message : '')
   const msg = raw.toLowerCase()
 
+  if (code === 'over_email_send_rate_limit' || msg.includes('email rate limit exceeded')) {
+    return 'Email limit reached (Supabase default: 2/hour). Admin must set up custom SMTP in Supabase, then try again in 1 hour.'
+  }
+  if (code === 'email_address_not_authorized' || msg.includes('not authorized')) {
+    return 'This email cannot receive mail on Supabase free built-in SMTP. Admin must configure custom SMTP (Resend/SendGrid).'
+  }
+  if (code === 'signup_disabled' || msg.includes('signup is disabled')) {
+    return 'New signups are disabled. Contact your admin.'
+  }
   if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
     return 'Invalid email or password'
   }
@@ -27,8 +28,8 @@ export function toUserError(
   if (msg.includes('user already registered') || msg.includes('already been registered')) {
     return 'An account with this email already exists'
   }
-  if (msg.includes('rate limit') || msg.includes('too many requests') || msg.includes('email rate')) {
-    return 'Too many emails sent. Wait 1 hour or ask admin to confirm your account in Supabase.'
+  if (msg.includes('rate limit') || msg.includes('too many requests')) {
+    return 'Too many attempts. Please wait and try again.'
   }
   if (msg.includes('network') || msg.includes('fetch')) {
     return 'Network error. Check your connection and try again'
@@ -38,9 +39,6 @@ export function toUserError(
   }
   if (msg.includes('duplicate') || msg.includes('unique')) {
     return 'That value already exists'
-  }
-  if (msg.includes('signup is disabled')) {
-    return 'New signups are disabled. Contact your admin.'
   }
 
   return fallback

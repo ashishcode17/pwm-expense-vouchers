@@ -192,24 +192,23 @@ Browser mein same URL.
 (Verification pehle bhi ho jati thi — sirf redirect broken tha.)
 
 ### Signup email hi nahi aa rahi
-**Common causes:**
-1. **Supabase free email limit** — built-in mail ~2–4 emails/hour. Wait 1 hour or use Resend on signup screen.
-2. **Email already registered** — Supabase dubara mail nahi bhejta (security). Use **Sign In** or admin manually confirms user.
-3. **Spam folder** — check Promotions/Spam.
-4. **Wrong redirect URL** — Auth → URL Configuration mein `https://vouchers.propertywithmanish.com/auth/confirm` allowlist mein hona chahiye.
+**Confirmed cause (testing):** Supabase built-in mail = **2 emails/hour only**. After testing, limit hit → **no mail at all** until reset.
 
-**Best fix for office (recommended):**
-1. Supabase → **Authentication → Providers → Email**
-2. **Confirm email → OFF** (save)
-3. Staff signup ke baad seedha login — no email needed
+**Fix (keep Confirm email ON):** Set up **custom SMTP** — full steps in **`EMAIL_SMTP_SETUP.md`** (Resend or Gmail).
 
-**Manual confirm (admin):**
-1. Supabase → **Authentication → Users**
-2. User dhundho → **Confirm user** / mark email confirmed
-3. User ab login kar sakta hai
+Quick link: https://supabase.com/dashboard/project/ownfexksfpkfojxyjwwv/auth/smtp
 
-**Custom SMTP (optional, production):**
-Auth → **SMTP Settings** → Gmail/SendGrid etc. for reliable delivery.
+**Until SMTP is done:**
+- Wait 1 hour, then try **one** new signup
+- Or admin manually **Confirm user** in Authentication → Users
+- Check Auth **Logs** for `over_email_send_rate_limit`
+
+**Also check:**
+- Spam folder
+- Redirect URL allowlist includes `/auth/confirm`
+- Email already registered → use Sign In or Resend on signup screen
+
+**Do NOT need to turn off Confirm email** once SMTP is configured.
 
 ### Signup hua lekin dashboard / role galat
 **Cause:** `profiles` row missing ya role staff hai  
