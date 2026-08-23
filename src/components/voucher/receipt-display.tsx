@@ -1,7 +1,10 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { ExternalLink, FileText, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
+import { resolveReceiptUrl } from '@/lib/upload-receipt'
 import {
   getReceiptFileName,
   isImageReceipt,
@@ -20,13 +23,28 @@ export function ReceiptDisplay({
   showDownload = true,
   compact = false,
 }: ReceiptDisplayProps) {
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const url = await resolveReceiptUrl(supabase, receiptUrl)
+      if (!cancelled) setResolvedUrl(url)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [receiptUrl, supabase])
+
+  const displayUrl = resolvedUrl || receiptUrl
   const fileName = getReceiptFileName(receiptUrl)
   const isPdf = isPdfReceipt(receiptUrl)
   const isImage = isImageReceipt(receiptUrl)
 
   const handleDownload = async () => {
     try {
-      const response = await fetch(receiptUrl)
+      const response = await fetch(displayUrl)
       if (!response.ok) throw new Error('Download failed')
 
       const blob = await response.blob()
@@ -41,7 +59,7 @@ export function ReceiptDisplay({
       toast.success('Receipt downloaded')
     } catch (error) {
       console.error('Error downloading receipt:', error)
-      window.open(receiptUrl, '_blank', 'noopener,noreferrer')
+      window.open(displayUrl, '_blank', 'noopener,noreferrer')
       toast.error('Could not download directly. Opened in new tab instead.')
     }
   }
@@ -55,7 +73,7 @@ export function ReceiptDisplay({
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">
           <a
-            href={receiptUrl}
+            href={displayUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
@@ -72,11 +90,11 @@ export function ReceiptDisplay({
         </div>
       </div>
 
-      {isImage && (
-        <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="block">
+      {isImage && resolvedUrl && (
+        <a href={displayUrl} target="_blank" rel="noopener noreferrer" className="block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={receiptUrl}
+            src={displayUrl}
             alt={fileName}
             className={`w-full rounded-md border border-gray-200 object-contain bg-white ${
               compact ? 'max-h-48' : 'max-h-96'

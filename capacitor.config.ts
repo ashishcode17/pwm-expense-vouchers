@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     url: 'https://vouchers.propertywithmanish.com',
-    cleartext: true,
+    cleartext: false,
     allowNavigation: [
       'vouchers.propertywithmanish.com',
       'propertywithmanish.com',
@@ -15,7 +15,7 @@ const config: CapacitorConfig = {
     ],
   },
   android: {
-    allowMixedContent: true,
+    allowMixedContent: false,
     backgroundColor: '#ffffff',
     webContentsDebuggingEnabled: false,
   },
